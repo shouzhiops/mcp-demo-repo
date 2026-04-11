@@ -1,11 +1,13 @@
-import { Table, Button, Tag, Space, message, Modal } from 'antd';
-import { ExclamationCircleOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import { Table, Button, Tag, Space, message, Modal, Input, Card } from 'antd';
+import { ExclamationCircleOutlined, SearchOutlined, AlertOutlined, DownloadOutlined } from '@ant-design/icons';
 import { useStore, Order } from '../../store';
 
 const { confirm } = Modal;
 
 export default function Orders() {
   const { orders, updateOrderStatus } = useStore();
+  const [searchText, setSearchText] = useState('');
 
   const handleDispatch = (id: number) => {
     confirm({
@@ -110,18 +112,36 @@ export default function Orders() {
     },
   ];
 
+  const filteredData = orders.filter(item => 
+    item.type.includes(searchText) || item.addressId.includes(searchText) || item.description.includes(searchText)
+  );
+
   return (
-    <div>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold">隐患分拨调度</h2>
-        <p className="text-gray-500 mt-2">负责管理和流转群众上报的隐患工单</p>
-      </div>
+    <Card 
+      className="shadow-sm"
+      title={
+        <div className="flex flex-col">
+          <span className="text-lg font-bold"><AlertOutlined className="mr-2" />隐患分拨调度</span>
+          <span className="text-sm text-gray-500 font-normal mt-1">负责管理和流转群众上报的隐患工单</span>
+        </div>
+      }
+      extra={
+        <Space>
+          <Input
+            placeholder="搜索类型/描述/地址"
+            prefix={<SearchOutlined />}
+            onChange={e => setSearchText(e.target.value)}
+            style={{ width: 250 }}
+          />
+          <Button icon={<DownloadOutlined />}>导出台账</Button>
+        </Space>
+      }
+    >
       <Table 
         columns={columns} 
-        dataSource={orders.map(order => ({ ...order, key: order.id }))} 
+        dataSource={filteredData.map(order => ({ ...order, key: order.id }))} 
         pagination={{ pageSize: 10 }}
-        className="shadow-sm border rounded-lg overflow-hidden"
       />
-    </div>
+    </Card>
   );
 }
