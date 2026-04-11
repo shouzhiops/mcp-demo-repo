@@ -55,7 +55,8 @@ export default function Mine() {
       style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' }}
     >
       <NavBar 
-        back={null} 
+        back="返回"
+        onBack={() => navigate('/mobile')}
         className="backdrop-blur-md bg-white/70 sticky top-0 z-50 border-b border-gray-200/50"
       >
         <span className="text-gray-900 font-medium">我的</span>
