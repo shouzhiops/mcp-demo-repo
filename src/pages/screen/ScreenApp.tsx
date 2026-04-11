@@ -6,6 +6,7 @@ import HeaderPanel from './components/HeaderPanel';
 import LeftPanel from './components/LeftPanel';
 import RightPanel from './components/RightPanel';
 import 'leaflet/dist/leaflet.css';
+import { hasTiandituKey } from '../../config/tianditu';
 
 export default function ScreenApp() {
   const { width, height } = useWindowSize();
@@ -18,14 +19,11 @@ export default function ScreenApp() {
     fetchPopulations, 
     fetchHouses, 
     fetchUnits, 
-    fetchFacilities, 
-    fetchConfig,
-    config
+    fetchFacilities
   } = useStore();
 
   // 1. 初始化全量数据
   useEffect(() => {
-    fetchConfig();
     fetchAddresses();
     fetchPopulations();
     fetchHouses();
@@ -52,7 +50,7 @@ export default function ScreenApp() {
   }, [width, height]);
 
   // 处理未配置地图 Key 的降级状态
-  if (!config?.tiandituKey) {
+  if (!hasTiandituKey) {
     return (
       <div className="w-screen h-screen flex flex-col items-center justify-center bg-gray-900">
         <div className="bg-gray-800 p-8 rounded-lg border border-gray-700 shadow-2xl text-center max-w-md">
@@ -61,7 +59,7 @@ export default function ScreenApp() {
           </svg>
           <h2 className="text-xl font-bold text-white mb-2">未配置天地图 API Key</h2>
           <p className="text-gray-400">
-            请前往管理后台的「系统全局设置」页面，配置您的天地图 API Key 后即可进入可视化指挥大屏。
+            请在前端项目根目录的 .env.local 中配置 VITE_TIANDITU_KEY（浏览器端 Key），并重启前端服务后再进入可视化指挥大屏。
           </p>
         </div>
       </div>

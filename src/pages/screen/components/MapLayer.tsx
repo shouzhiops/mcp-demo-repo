@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useStore } from '../../../store';
+import { TIANDITU_KEY, hasTiandituKey } from '../../../config/tianditu';
 
 // 图标单例，避免重复创建
 const normalIcon = L.divIcon({
@@ -62,11 +63,11 @@ function MapController({ selectedOrderId }: { selectedOrderId: number | null }) 
 }
 
 export default function MapLayer({ selectedOrderId }: MapLayerProps) {
-  const { config, addresses, orders } = useStore();
+  const { addresses, orders } = useStore();
   const activeOrders = orders.filter(o => o.status !== '已销账');
 
   // 如果没有配置 key，理论上 ScreenApp 会拦截，但为了安全起见这里也加个防御
-  if (!config?.tiandituKey) return null;
+  if (!hasTiandituKey) return null;
 
   return (
     <div className="absolute inset-0 z-0">
@@ -81,18 +82,17 @@ export default function MapLayer({ selectedOrderId }: MapLayerProps) {
         
         {/* 天地图影像底图 */}
         <TileLayer
-          url={`http://t0.tianditu.gov.cn/img_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=img&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${config.tiandituKey}`}
+          url={`http://t0.tianditu.gov.cn/img_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=img&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${TIANDITU_KEY}`}
           maxZoom={18}
         />
         {/* 天地图影像注记 */}
         <TileLayer
-          url={`http://t0.tianditu.gov.cn/cia_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=cia&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${config.tiandituKey}`}
+          url={`http://t0.tianditu.gov.cn/cia_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=cia&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${TIANDITU_KEY}`}
           maxZoom={18}
         />
 
         {addresses.map((address) => {
           const hasAlert = activeOrders.some(o => o.addressId === address.id);
-          const isSelected = selectedOrderId && activeOrders.find(o => o.id === selectedOrderId)?.addressId === address.id;
           
           return (
             <Marker 

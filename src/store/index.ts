@@ -71,11 +71,6 @@ export interface Facility {
   address?: Address;
 }
 
-export interface Config {
-  id: number;
-  tiandituKey: string | null;
-}
-
 interface StoreState {
   orders: Order[];
   addresses: Address[];
@@ -83,7 +78,6 @@ interface StoreState {
   houses: House[];
   units: Unit[];
   facilities: Facility[];
-  config: Config | null;
   loading: boolean;
   fetchAddresses: () => Promise<void>;
   fetchOrders: () => Promise<void>;
@@ -91,8 +85,6 @@ interface StoreState {
   fetchHouses: () => Promise<void>;
   fetchUnits: () => Promise<void>;
   fetchFacilities: () => Promise<void>;
-  fetchConfig: () => Promise<void>;
-  updateConfig: (tiandituKey: string) => Promise<void>;
   updateOrderStatus: (id: number, status: Order['status'], handlerId?: number) => Promise<void>;
   
   // CRUD - Address
@@ -128,29 +120,7 @@ export const useStore = create<StoreState>((set, get) => ({
   houses: [],
   units: [],
   facilities: [],
-  config: null,
   loading: false,
-  
-  fetchConfig: async () => {
-    set({ loading: true });
-    try {
-      const response = await axios.get(`${API_URL}/config`);
-      set({ config: response.data, loading: false });
-    } catch (error) {
-      console.error('Error fetching config:', error);
-      set({ loading: false });
-    }
-  },
-
-  updateConfig: async (tiandituKey: string) => {
-    try {
-      const response = await axios.patch(`${API_URL}/config`, { tiandituKey });
-      set({ config: response.data });
-    } catch (error) {
-      console.error('Error updating config:', error);
-      throw error;
-    }
-  },
 
   fetchAddresses: async () => {
     set({ loading: true });
