@@ -88,8 +88,17 @@ export default function Roles() {
 
   const columns = [
     { title: '角色ID', dataIndex: 'id', key: 'id', width: 100 },
-    { title: '角色名称', dataIndex: 'name', key: 'name', width: 200 },
-    { title: '权限说明', dataIndex: 'permissions', key: 'permissions', width: 300 },
+    { title: '角色名称', dataIndex: 'name', key: 'name', width: 150 },
+    { 
+      title: '权限说明', 
+      dataIndex: 'permissions', 
+      key: 'permissions', 
+      render: (text: string) => (
+        <div style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={text}>
+          {text}
+        </div>
+      )
+    },
     {
       title: '操作',
       key: 'action',
