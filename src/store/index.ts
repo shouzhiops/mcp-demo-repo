@@ -22,6 +22,8 @@ export interface Address {
   longitude: number;
   latitude: number;
   orders?: Order[];
+  populations?: Population[];
+  houses?: House[];
 }
 
 export interface Population {
