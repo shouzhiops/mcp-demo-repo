@@ -31,10 +31,12 @@ const { Header, Sider, Content } = Layout;
 export default function AdminApp() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { fetchAddresses, fetchOrders, fetchPopulations, fetchHouses, fetchUnits, fetchFacilities, currentUser, logout, updateUser } = useStore();
+  const { fetchAddresses, fetchOrders, fetchPopulations, fetchHouses, fetchUnits, fetchFacilities, currentUser, logout, updateUser, fetchCurrentUser } = useStore();
 
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
   const [passwordForm] = Form.useForm();
+  const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
+  const [profileForm] = Form.useForm();
 
   useEffect(() => {
     fetchAddresses();
@@ -64,6 +66,19 @@ export default function AdminApp() {
     }
   };
 
+  const handleProfileSubmit = async (values: any) => {
+    if (!currentUser?.id) return;
+    try {
+      await updateUser(currentUser.id, { name: values.name } as any);
+      await fetchCurrentUser();
+      message.success('个人信息更新成功');
+      setIsProfileModalVisible(false);
+    } catch (error) {
+      console.error('更新个人信息失败', error);
+      message.error('更新个人信息失败，请重试');
+    }
+  };
+
   const userMenuItems: MenuProps['items'] = [
     { key: 'profile', label: '个人信息' },
     { key: 'password', label: '修改密码' },
@@ -77,7 +92,11 @@ export default function AdminApp() {
     } else if (key === 'password') {
       setIsPasswordModalVisible(true);
     } else if (key === 'profile') {
-      message.info('个人信息功能开发中');
+      profileForm.setFieldsValue({
+        username: currentUser?.username,
+        name: currentUser?.name
+      });
+      setIsProfileModalVisible(true);
     }
   };
 
@@ -199,6 +218,40 @@ export default function AdminApp() {
             ]}
           >
             <Input.Password placeholder="请再次输入新密码" />
+          </Form.Item>
+        </Form>
+      </Modal>
+      <Modal
+        title="个人信息"
+        open={isProfileModalVisible}
+        onOk={() => profileForm.submit()}
+        onCancel={() => {
+          setIsProfileModalVisible(false);
+          profileForm.resetFields();
+        }}
+        okText="保存"
+        cancelText="取消"
+        destroyOnClose
+      >
+        <Form
+          form={profileForm}
+          layout="vertical"
+          onFinish={handleProfileSubmit}
+        >
+          <Form.Item
+            name="username"
+            label="用户名"
+          >
+            <Input disabled placeholder="用户名" />
+          </Form.Item>
+          <Form.Item
+            name="name"
+            label="姓名"
+            rules={[
+              { required: true, message: '请输入姓名' }
+            ]}
+          >
+            <Input placeholder="请输入姓名" />
           </Form.Item>
         </Form>
       </Modal>
