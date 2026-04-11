@@ -1,8 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../../store';
 
 export default function HeaderPanel() {
   const { populations, houses, units, orders } = useStore();
+  const navigate = useNavigate();
+  const [timeStr, setTimeStr] = useState('');
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const date = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      
+      const days = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+      const day = days[now.getDay()];
+      
+      setTimeStr(`${year}-${month}-${date} ${hours}:${minutes}:${seconds} ${day}`);
+    };
+
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const totalPopulations = populations.length;
   const totalHouses = houses.length;
@@ -18,6 +42,32 @@ export default function HeaderPanel() {
             莲麻村一标四实指挥中枢
           </h1>
         </div>
+      </div>
+
+      {/* 右上角挂件区 */}
+      <div className="absolute right-8 top-8 flex items-center gap-6 pointer-events-auto">
+        {/* 时间与天气 */}
+        <div className="flex items-center gap-4 bg-slate-900/60 backdrop-blur-md border border-slate-700/50 px-4 py-2 rounded-full shadow-lg">
+          <div className="text-cyan-400 font-mono text-lg font-bold tracking-wider">
+            {timeStr}
+          </div>
+          <div className="w-px h-4 bg-slate-600"></div>
+          <div className="flex items-center gap-2 text-gray-300 font-medium">
+            <span className="text-xl">🌤️</span>
+            <span>多云 26°C</span>
+          </div>
+        </div>
+
+        {/* 后台跳转按钮 */}
+        <button 
+          onClick={() => navigate('/admin')}
+          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-5 py-2.5 rounded-full font-bold shadow-[0_0_15px_rgba(79,70,229,0.4)] transition-all transform hover:scale-105 border border-blue-400/30"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+          </svg>
+          数据后台
+        </button>
       </div>
 
       {/* 核心指标 KPI 容器 */}
