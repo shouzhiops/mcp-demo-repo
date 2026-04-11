@@ -1,12 +1,84 @@
 import express from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 const app = express();
 const prisma = new PrismaClient();
 
 app.use(cors());
 app.use(express.json());
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+const authenticateToken = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (req.path.startsWith('/api/auth') || req.path.startsWith('/api/config')) {
+    return next();
+  }
+
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
+    if (err) return res.status(403).json({ error: 'Forbidden' });
+    (req as any).user = user;
+    next();
+  });
+};
+
+app.use('/api', authenticateToken);
+
+// ==================== Auth API ====================
+app.post('/api/auth/register', async (req, res) => {
+  const { username, password, name, roleId } = req.body;
+  try {
+    const existingUser = await prisma.user.findUnique({ where: { username } });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Username already exists' });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await prisma.user.create({
+      data: {
+        username,
+        password: hashedPassword,
+        name,
+        roleId,
+        status: 'pending'
+      }
+    });
+    const { password: _, ...userWithoutPassword } = user;
+    res.json(userWithoutPassword);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const user = await prisma.user.findUnique({ where: { username }, include: { role: true } });
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }
+    if (user.status !== 'active') {
+      return res.status(403).json({ error: `Account status is ${user.status}` });
+    }
+
+    const token = jwt.sign({ id: user.id, username: user.username, role: user.role?.name }, JWT_SECRET, { expiresIn: '24h' });
+    const { password: _, ...userWithoutPassword } = user;
+    
+    res.json({ token, user: userWithoutPassword });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // ==================== Address API ====================
 app.get('/api/addresses', async (req, res) => {
@@ -177,6 +249,95 @@ app.delete('/api/orders/:id', async (req, res) => {
   await prisma.order.delete({ where: { id: Number(id) } });
   res.json({ success: true });
 })
+
+// ==================== User API ====================
+app.get('/api/users', async (req, res) => {
+  const users = await prisma.user.findMany({ include: { role: true } });
+  const usersWithoutPassword = users.map((u: any) => {
+    const { password, ...rest } = u;
+    return rest;
+  });
+  res.json(usersWithoutPassword);
+});
+
+app.post('/api/users', async (req, res) => {
+  const { username, password, name, status, roleId } = req.body;
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await prisma.user.create({
+      data: { username, password: hashedPassword, name, status, roleId }
+    });
+    const { password: _, ...userWithoutPassword } = user;
+    res.json(userWithoutPassword);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.put('/api/users/:id', async (req, res) => {
+  const { id } = req.params;
+  const { password, ...data } = req.body;
+  try {
+    if (password) {
+      data.password = await bcrypt.hash(password, 10);
+    }
+    const user = await prisma.user.update({
+      where: { id: Number(id) },
+      data
+    });
+    const { password: _, ...userWithoutPassword } = user;
+    res.json(userWithoutPassword);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.delete('/api/users/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await prisma.user.delete({ where: { id: Number(id) } });
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// ==================== Role API ====================
+app.get('/api/roles', async (req, res) => {
+  const roles = await prisma.role.findMany();
+  res.json(roles);
+});
+
+app.post('/api/roles', async (req, res) => {
+  const data = req.body;
+  try {
+    const role = await prisma.role.create({ data });
+    res.json(role);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.put('/api/roles/:id', async (req, res) => {
+  const { id } = req.params;
+  const data = req.body;
+  try {
+    const role = await prisma.role.update({ where: { id: Number(id) }, data });
+    res.json(role);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.delete('/api/roles/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await prisma.role.delete({ where: { id: Number(id) } });
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 

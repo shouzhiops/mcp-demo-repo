@@ -1,7 +1,49 @@
 import { create } from 'zustand';
 import axios from 'axios';
 
+
 const API_URL = '/api';
+
+axios.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      // We don't want to reload if we are already on login page
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+
+
+export interface User {
+  id: number;
+  username: string;
+  name?: string;
+  status?: string;
+  roleId: number;
+  role?: Role;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Role {
+  id: number;
+  name: string;
+  permissions?: string;
+}
 
 export interface Order {
   id: number;
@@ -72,7 +114,18 @@ export interface Facility {
 }
 
 interface StoreState {
+
+  token: string | null;
+  currentUser: User | null;
+  users: User[];
+  roles: Role[];
+  login: (credentials: any) => Promise<void>;
+  register: (credentials: any) => Promise<void>;
+  logout: () => void;
+  fetchUsers: () => Promise<void>;
+  fetchRoles: () => Promise<void>;
   orders: Order[];
+
   addresses: Address[];
   populations: Population[];
   houses: House[];
@@ -111,10 +164,56 @@ interface StoreState {
   addOrder: (data: Partial<Order>) => Promise<void>;
   updateOrderFull: (id: number, data: Partial<Order>) => Promise<void>;
   deleteOrder: (id: number) => Promise<void>;
+  
+  // CRUD - User
+  addUser: (data: Partial<User>) => Promise<void>;
+  updateUser: (id: number, data: Partial<User>) => Promise<void>;
+  deleteUser: (id: number) => Promise<void>;
+
+  // CRUD - Role
+  addRole: (data: Partial<Role>) => Promise<void>;
+  updateRole: (id: number, data: Partial<Role>) => Promise<void>;
+  deleteRole: (id: number) => Promise<void>;
 }
 
 export const useStore = create<StoreState>((set, get) => ({
+
+  token: localStorage.getItem('token') || null,
+  currentUser: null,
+  users: [],
+  roles: [],
+  
+  login: async (credentials) => {
+    const res = await axios.post(`${API_URL}/auth/login`, credentials);
+    const { token, user } = res.data;
+    localStorage.setItem('token', token);
+    set({ token, currentUser: user });
+  },
+
+  register: async (credentials) => {
+    const res = await axios.post(`${API_URL}/auth/register`, credentials);
+    const { token, user } = res.data;
+    localStorage.setItem('token', token);
+    set({ token, currentUser: user });
+  },
+
+  logout: () => {
+    localStorage.removeItem('token');
+    set({ token: null, currentUser: null });
+  },
+
+  fetchUsers: async () => {
+    const res = await axios.get(`${API_URL}/users`);
+    set({ users: res.data });
+  },
+
+  fetchRoles: async () => {
+    const res = await axios.get(`${API_URL}/roles`);
+    set({ roles: res.data });
+  },
+
   orders: [],
+
   addresses: [],
   populations: [],
   houses: [],
@@ -226,5 +325,15 @@ export const useStore = create<StoreState>((set, get) => ({
   addOrder: async (data) => { await axios.post(`${API_URL}/orders`, data); get().fetchOrders(); },
   updateOrderFull: async (id, data) => { await axios.put(`${API_URL}/orders/${id}`, data); get().fetchOrders(); },
   deleteOrder: async (id) => { await axios.delete(`${API_URL}/orders/${id}`); get().fetchOrders(); },
+
+  // User CRUD
+  addUser: async (data) => { await axios.post(`${API_URL}/users`, data); get().fetchUsers(); },
+  updateUser: async (id, data) => { await axios.put(`${API_URL}/users/${id}`, data); get().fetchUsers(); },
+  deleteUser: async (id) => { await axios.delete(`${API_URL}/users/${id}`); get().fetchUsers(); },
+
+  // Role CRUD
+  addRole: async (data) => { await axios.post(`${API_URL}/roles`, data); get().fetchRoles(); },
+  updateRole: async (id, data) => { await axios.put(`${API_URL}/roles/${id}`, data); get().fetchRoles(); },
+  deleteRole: async (id) => { await axios.delete(`${API_URL}/roles/${id}`); get().fetchRoles(); },
 
 }));

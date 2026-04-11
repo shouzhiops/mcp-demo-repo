@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
@@ -59,12 +60,10 @@ async function main() {
   await prisma.unit.deleteMany()
   await prisma.facility.deleteMany()
   await prisma.address.deleteMany()
-  await prisma.config.deleteMany()
+  await prisma.user.deleteMany()
+  await prisma.role.deleteMany()
 
-  // Config
-  await prisma.config.create({
-    data: { id: 1, tiandituKey: '' }
-  })
+  // Config removed
 
   const addresses: any[] = [];
   const populations: any[] = [];
@@ -217,6 +216,25 @@ async function main() {
   await prisma.unit.createMany({ data: units });
   await prisma.facility.createMany({ data: facilities });
   await prisma.order.createMany({ data: orders });
+
+  console.log('Inserting Users & Roles...');
+  const adminRole = await prisma.role.create({
+    data: {
+      name: '超级管理员',
+      permissions: 'all'
+    }
+  });
+
+  const hashedAdminPassword = await bcrypt.hash('admin123', 10);
+  await prisma.user.create({
+    data: {
+      username: 'admin',
+      password: hashedAdminPassword,
+      name: '系统超管',
+      status: 'active',
+      roleId: adminRole.id
+    }
+  });
 
   console.log('Large-scale Seed complete!')
 }

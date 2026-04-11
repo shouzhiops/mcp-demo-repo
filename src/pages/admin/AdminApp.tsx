@@ -9,6 +9,8 @@ import {
   ShopOutlined,
   SafetyOutlined,
   AlertOutlined,
+  UserOutlined,
+  SafetyCertificateOutlined,
   LogoutOutlined
 } from '@ant-design/icons';
 import Dashboard from './Dashboard';
@@ -18,6 +20,8 @@ import House from './House';
 import Unit from './Unit';
 import Facility from './Facility';
 import Orders from './Orders';
+import Users from './Users';
+import Roles from './Roles';
 import { useStore } from '../../store';
 
 const { Header, Sider, Content } = Layout;
@@ -44,6 +48,8 @@ export default function AdminApp() {
     { key: '/admin/unit', icon: <ShopOutlined />, label: '实有单位台账' },
     { key: '/admin/facility', icon: <SafetyOutlined />, label: '实有设施台账' },
     { key: '/admin/orders', icon: <AlertOutlined />, label: '隐患分拨调度' },
+    { key: '/admin/users', icon: <UserOutlined />, label: '村委班子' },
+    { key: '/admin/roles', icon: <SafetyCertificateOutlined />, label: '权限管理' },
   ];
 
   return (
@@ -87,6 +93,8 @@ export default function AdminApp() {
             <Route path="/unit" element={<Unit />} />
             <Route path="/facility" element={<Facility />} />
             <Route path="/orders" element={<Orders />} />
+            <Route path="/users" element={<Users />} />
+            <Route path="/roles" element={<Roles />} />
           </Routes>
         </Content>
       </Layout>
