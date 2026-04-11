@@ -1,0 +1,27 @@
+import React from 'react';
+import { NavBar, Card } from 'antd-mobile';
+import { User } from 'lucide-react';
+
+export default function Mine() {
+  return (
+    <div className="bg-gray-100 min-h-full pb-20">
+      <NavBar back={null} className="bg-blue-600 text-white">
+        我的
+      </NavBar>
+      
+      <div className="p-4">
+        <Card className="shadow-sm border-none rounded-xl mb-4">
+          <div className="flex items-center p-2">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+              <User className="w-8 h-8 text-blue-600" />
+            </div>
+            <div>
+              <div className="text-lg font-bold">管理员</div>
+              <div className="text-sm text-gray-500 mt-1">系统管理员</div>
+            </div>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
