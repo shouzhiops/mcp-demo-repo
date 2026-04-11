@@ -51,9 +51,9 @@ export default function AdminApp() {
 
   return (
     <Layout className="min-h-screen font-sans">
-      <Sider width={240} theme="dark" className="fixed left-0 h-screen shadow-xl">
+      <Sider width={180} theme="dark" className="fixed left-0 h-screen shadow-xl">
         <div className="h-16 flex items-center justify-center bg-gray-900 border-b border-gray-800">
-          <span className="text-white text-lg font-bold tracking-wider">
+          <span className="text-white text-base font-bold">
             莲麻村治理中心
           </span>
         </div>
@@ -66,13 +66,13 @@ export default function AdminApp() {
           className="mt-4"
         />
         <div className="absolute bottom-0 w-full p-4 border-t border-gray-800">
-          <div className="flex items-center text-gray-400 hover:text-white cursor-pointer transition-colors px-4 py-2 rounded-md hover:bg-gray-800">
-            <LogoutOutlined className="mr-3" />
-            <span>退出登录</span>
+          <div className="flex items-center justify-center text-gray-400 hover:text-white cursor-pointer transition-colors px-2 py-2 rounded-md hover:bg-gray-800">
+            <LogoutOutlined className="mr-2" />
+            <span>退出</span>
           </div>
         </div>
       </Sider>
-      <Layout className="ml-[240px]">
+      <Layout className="ml-[180px]">
         <Header className="bg-white px-8 flex justify-between items-center shadow-sm sticky top-0 z-10">
           <div className="text-gray-600 font-medium">欢迎回来，村委书记/内勤</div>
           <div className="flex items-center gap-4">
