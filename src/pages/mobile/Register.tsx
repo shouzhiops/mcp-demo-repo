@@ -3,6 +3,27 @@ import { NavBar, Form, Input, Button, Selector, Toast, Picker } from 'antd-mobil
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
 
+const SelectorField = ({ options, multiple, columns, value, onChange }: any) => {
+  return (
+    <div className="bg-gray-100 rounded-xl p-2">
+      <Selector
+        columns={columns}
+        multiple={multiple}
+        value={value}
+        onChange={onChange}
+        style={{
+          '--border-radius': '8px',
+          '--color': 'transparent',
+          '--checked-color': 'transparent',
+          '--checked-text-color': '#1677ff',
+          '--text-color': '#4b5563',
+        }}
+        options={options}
+      />
+    </div>
+  );
+};
+
 const HousePicker = ({ value, onChange, houses }: any) => {
   const [visible, setVisible] = useState(false);
   
@@ -133,27 +154,18 @@ export default function Register() {
           <div className="bg-white rounded-2xl shadow-sm p-2 mb-4">
             <div className="text-gray-800 font-semibold px-2 py-2 text-base">人员标签</div>
             <Form.Item name="tags" rules={[{ required: true, message: '请选择人员标签' }]}>
-              <div className="bg-gray-100 rounded-xl p-2">
-                <Selector
-                  columns={3}
-                  multiple
-                  style={{
-                    '--border-radius': '8px',
-                    '--color': 'transparent',
-                    '--checked-color': 'transparent',
-                    '--checked-text-color': '#1677ff',
-                    '--text-color': '#4b5563',
-                  }}
-                  options={[
-                    { label: '返乡人员', value: '返乡人员' },
-                    { label: '留守老人', value: '留守老人' },
-                    { label: '留守儿童', value: '留守儿童' },
-                    { label: '外来租客', value: '外来租客' },
-                    { label: '退役军人', value: '退役军人' },
-                    { label: '低保户', value: '低保户' },
-                  ]}
-                />
-              </div>
+              <SelectorField
+                columns={3}
+                multiple
+                options={[
+                  { label: '返乡人员', value: '返乡人员' },
+                  { label: '留守老人', value: '留守老人' },
+                  { label: '留守儿童', value: '留守儿童' },
+                  { label: '外来租客', value: '外来租客' },
+                  { label: '退役军人', value: '退役军人' },
+                  { label: '低保户', value: '低保户' },
+                ]}
+              />
             </Form.Item>
           </div>
           
@@ -161,23 +173,14 @@ export default function Register() {
           <div className="bg-white rounded-2xl shadow-sm p-2 mb-4">
             <div className="text-gray-800 font-semibold px-2 py-2 text-base">补充信息</div>
             <Form.Item name="health" label="健康状况">
-              <div className="bg-gray-100 rounded-xl p-2">
-                <Selector
-                  columns={3}
-                  style={{
-                    '--border-radius': '8px',
-                    '--color': 'transparent',
-                    '--checked-color': 'transparent',
-                    '--checked-text-color': '#1677ff',
-                    '--text-color': '#4b5563',
-                  }}
-                  options={[
-                    { label: '健康', value: '健康' },
-                    { label: '慢性病', value: '慢性病' },
-                    { label: '失能', value: '失能' },
-                  ]}
-                />
-              </div>
+              <SelectorField
+                columns={3}
+                options={[
+                  { label: '健康', value: '健康' },
+                  { label: '慢性病', value: '慢性病' },
+                  { label: '失能', value: '失能' },
+                ]}
+              />
             </Form.Item>
             <Form.Item name="guardian" label="紧急联系人">
               <div className="bg-gray-100 rounded-xl px-3 py-2">
