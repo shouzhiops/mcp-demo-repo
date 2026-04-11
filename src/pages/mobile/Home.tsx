@@ -7,13 +7,14 @@ import { useStore } from '../../store';
 export default function Home() {
   const navigate = useNavigate();
   const orders = useStore(state => state.orders);
+  const currentUser = useStore(state => state.currentUser);
 
-  const handlerId = 101;
+  const handlerId = currentUser?.id || 101;
   const availableTasks = orders.filter(order => order.status === '待分拨' || order.handlerId === handlerId);
   const pendingTasks = availableTasks.filter(task => task.status !== '已处置' && task.status !== '已销账');
   const pendingCount = pendingTasks.length;
 
-  const menuItems = [
+  const allMenuItems = [
     {
       title: '随手拍',
       icon: <Camera className="w-8 h-8 text-blue-500" />,
@@ -32,7 +33,7 @@ export default function Home() {
     }
   ];
 
-  const modules = [
+  const allModules = [
     {
       title: '地址',
       icon: <MapPin className="w-8 h-8 text-blue-500" />,
@@ -65,6 +66,18 @@ export default function Home() {
       badge: pendingCount > 0 ? pendingCount : null
     }
   ];
+
+  const userPermissions = currentUser?.role?.permissions || '';
+  const isSuperAdmin = userPermissions === 'all';
+  const permissionList = userPermissions.split(',');
+
+  const filterMenu = (item: any) => {
+    if (isSuperAdmin) return true;
+    return permissionList.includes(item.path);
+  };
+
+  const menuItems = allMenuItems.filter(filterMenu);
+  const modules = allModules.filter(filterMenu);
 
   return (
     <div className="bg-gray-50 min-h-screen pb-20">

@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Space, Input, Card, Modal, Form, Popconfirm, message } from 'antd';
-import { SearchOutlined, PlusOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
+import { Table, Button, Space, Input, Card, Modal, Form, Popconfirm, message, Tree } from 'antd';
+import { SearchOutlined, PlusOutlined, SafetyCertificateOutlined, SettingOutlined } from '@ant-design/icons';
 import { useStore, Role } from '../../store';
+import { PERMISSION_TREE } from '../../config/permissions';
 
 export default function Roles() {
   const { roles, fetchRoles, addRole, updateRole, deleteRole } = useStore();
   const [searchText, setSearchText] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
+  const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
+  const [checkedKeys, setCheckedKeys] = useState<React.Key[]>([]);
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -55,6 +58,34 @@ export default function Roles() {
     setIsModalOpen(false);
   };
 
+  const handleAssignPermissions = (record: Role) => {
+    setEditingRole(record);
+    const keys = record.permissions ? record.permissions.split(',') : [];
+    setCheckedKeys(keys);
+    setIsPermissionModalOpen(true);
+  };
+
+  const handlePermissionModalOk = async () => {
+    if (editingRole) {
+      try {
+        const permissions = checkedKeys.join(',');
+        await updateRole(editingRole.id, { permissions });
+        message.success('权限分配成功');
+        setIsPermissionModalOpen(false);
+      } catch (error) {
+        message.error('权限分配失败');
+      }
+    }
+  };
+
+  const handlePermissionModalCancel = () => {
+    setIsPermissionModalOpen(false);
+  };
+
+  const onCheck = (checkedKeysValue: any) => {
+    setCheckedKeys(checkedKeysValue as React.Key[]);
+  };
+
   const columns = [
     { title: '角色ID', dataIndex: 'id', key: 'id', width: 100 },
     { title: '角色名称', dataIndex: 'name', key: 'name', width: 200 },
@@ -62,10 +93,11 @@ export default function Roles() {
     {
       title: '操作',
       key: 'action',
-      width: 150,
+      width: 200,
       render: (_: any, record: Role) => (
         <Space size="middle">
           <a className="text-blue-600" onClick={() => handleEdit(record)}>编辑</a>
+          <a className="text-green-600" onClick={() => handleAssignPermissions(record)}>分配权限</a>
           <Popconfirm
             title="确定要删除这个角色吗？"
             onConfirm={() => handleDelete(record.id)}
@@ -133,6 +165,24 @@ export default function Roles() {
             <Input.TextArea rows={4} placeholder="请输入权限说明" />
           </Form.Item>
         </Form>
+      </Modal>
+
+      <Modal
+        title={`分配权限 - ${editingRole?.name}`}
+        open={isPermissionModalOpen}
+        onOk={handlePermissionModalOk}
+        onCancel={handlePermissionModalCancel}
+        destroyOnClose
+      >
+        <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+          <Tree
+            checkable
+            defaultExpandAll
+            checkedKeys={checkedKeys}
+            onCheck={onCheck}
+            treeData={PERMISSION_TREE}
+          />
+        </div>
       </Modal>
     </Card>
   );

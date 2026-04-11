@@ -29,7 +29,7 @@ const { Header, Sider, Content } = Layout;
 export default function AdminApp() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { fetchAddresses, fetchOrders, fetchPopulations, fetchHouses, fetchUnits, fetchFacilities } = useStore();
+  const { fetchAddresses, fetchOrders, fetchPopulations, fetchHouses, fetchUnits, fetchFacilities, currentUser } = useStore();
 
   useEffect(() => {
     fetchAddresses();
@@ -40,7 +40,7 @@ export default function AdminApp() {
     fetchFacilities();
   }, []);
 
-  const menuItems = [
+  const allMenuItems = [
     { key: '/admin', icon: <DashboardOutlined />, label: '工作台概览' },
     { key: '/admin/address', icon: <EnvironmentOutlined />, label: '标准地址台账' },
     { key: '/admin/population', icon: <TeamOutlined />, label: '实有人口台账' },
@@ -51,6 +51,15 @@ export default function AdminApp() {
     { key: '/admin/users', icon: <UserOutlined />, label: '村委班子' },
     { key: '/admin/roles', icon: <SafetyCertificateOutlined />, label: '权限管理' },
   ];
+
+  const userPermissions = currentUser?.role?.permissions || '';
+  const isSuperAdmin = userPermissions === 'all';
+  const permissionList = userPermissions.split(',');
+
+  const menuItems = allMenuItems.filter(item => {
+    if (isSuperAdmin) return true;
+    return permissionList.includes(item.key);
+  });
 
   return (
     <Layout className="min-h-screen font-sans">
