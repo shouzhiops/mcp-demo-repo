@@ -1,0 +1,3 @@
+- [x] 后端 `api/src/index.ts` 中的所有业务模型 POST、PUT、DELETE 接口都包裹了 `try...catch`，并在出错时返回合法的 400 状态码 JSON 错误。
+- [x] 前端 `src/pages/admin/` 目录下的台账组件中，`handleAdd` 按钮执行了强制清空表单底层数据 (`form.setFieldsValue({})`) 的逻辑。
+- [x] 前端 `src/pages/admin/` 目录下的台账组件中，表单校验与 API 请求的错误捕获分离，如果 API 请求失败，能够通过 `message.error` 在页面上弹出错误提示。

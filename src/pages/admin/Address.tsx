@@ -19,6 +19,7 @@ export default function Address() {
   const handleAdd = () => {
     setEditingAddress(null);
     form.resetFields();
+    form.setFieldsValue({});
     setIsModalOpen(true);
   };
 
@@ -38,8 +39,15 @@ export default function Address() {
   };
 
   const handleModalOk = async () => {
+    let values;
     try {
-      const values = await form.validateFields();
+      values = await form.validateFields();
+    } catch (error) {
+      console.error('Validation failed:', error);
+      return;
+    }
+
+    try {
       if (editingAddress) {
         await updateAddress(editingAddress.id, values);
         message.success('修改成功');
@@ -49,7 +57,8 @@ export default function Address() {
       }
       setIsModalOpen(false);
     } catch (error) {
-      console.error('Validation failed:', error);
+      console.error('API call failed:', error);
+      message.error('操作失败，请重试');
     }
   };
 

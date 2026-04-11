@@ -24,6 +24,7 @@ export default function Orders() {
   const handleAdd = () => {
     setEditingOrder(null);
     form.resetFields();
+    form.setFieldsValue({});
     setIsModalVisible(true);
   };
 
@@ -43,8 +44,15 @@ export default function Orders() {
   };
 
   const handleModalOk = async () => {
+    let values;
     try {
-      const values = await form.validateFields();
+      values = await form.validateFields();
+    } catch (error) {
+      console.error('Validation Failed:', error);
+      return;
+    }
+
+    try {
       if (editingOrder) {
         await updateOrderFull(editingOrder.id, values);
         message.success('编辑成功');
@@ -54,7 +62,8 @@ export default function Orders() {
       }
       setIsModalVisible(false);
     } catch (error) {
-      console.error('Validation Failed:', error);
+      console.error('API call failed:', error);
+      message.error('操作失败，请重试');
     }
   };
 

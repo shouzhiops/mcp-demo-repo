@@ -19,6 +19,7 @@ export default function Unit() {
   const handleAdd = () => {
     setEditingId(null);
     form.resetFields();
+    form.setFieldsValue({});
     setIsModalVisible(true);
   };
 
@@ -38,8 +39,15 @@ export default function Unit() {
   };
 
   const handleModalOk = async () => {
+    let values;
     try {
-      const values = await form.validateFields();
+      values = await form.validateFields();
+    } catch (error) {
+      console.error('Validate Failed:', error);
+      return;
+    }
+
+    try {
       if (editingId) {
         await updateUnit(editingId, values);
         message.success('更新成功');
@@ -49,7 +57,8 @@ export default function Unit() {
       }
       setIsModalVisible(false);
     } catch (error) {
-      console.error('Validate Failed:', error);
+      console.error('API call failed:', error);
+      message.error('操作失败，请重试');
     }
   };
 

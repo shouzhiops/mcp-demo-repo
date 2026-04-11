@@ -4,7 +4,7 @@ import { DownloadOutlined, SafetyCertificateOutlined, SearchOutlined, PlusOutlin
 import { useStore } from '../../store';
 
 export default function Facility() {
-  const { facilities, loading, fetchFacilities, addFacility, updateFacility, deleteFacility } = useStore();
+  const { facilities, loading, fetchFacilities, addFacility, updateFacility, deleteFacility, addresses, fetchAddresses } = useStore();
   const [searchText, setSearchText] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -12,11 +12,13 @@ export default function Facility() {
 
   useEffect(() => {
     fetchFacilities();
+    fetchAddresses();
   }, []);
 
   const handleAdd = () => {
     setEditingId(null);
     form.resetFields();
+    form.setFieldsValue({});
     setIsModalVisible(true);
   };
 
@@ -39,8 +41,15 @@ export default function Facility() {
   };
 
   const handleModalOk = async () => {
+    let values;
     try {
-      const values = await form.validateFields();
+      values = await form.validateFields();
+    } catch (error) {
+      console.error('Validation Failed:', error);
+      return;
+    }
+
+    try {
       const submitData = {
         ...values,
         type: Array.isArray(values.type) ? values.type[0] : values.type,
@@ -55,7 +64,8 @@ export default function Facility() {
       }
       setIsModalVisible(false);
     } catch (error) {
-      console.error('Validation Failed:', error);
+      console.error('API call failed:', error);
+      message.error('操作失败，请重试');
     }
   };
 
@@ -184,9 +194,15 @@ export default function Facility() {
           <Form.Item
             name="addressId"
             label="标准地址"
-            rules={[{ required: true, message: '请输入标准地址编号' }]}
+            rules={[{ required: true, message: '请选择关联的标准地址' }]}
           >
-            <Input placeholder="请输入关联的标准地址编号（如：莲麻村-中田组-001号）" />
+            <Select placeholder="请选择关联的标准地址" showSearch>
+              {addresses.map(addr => (
+                <Select.Option key={addr.id} value={addr.id}>
+                  {addr.id} ({addr.name})
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
         </Form>
       </Modal>

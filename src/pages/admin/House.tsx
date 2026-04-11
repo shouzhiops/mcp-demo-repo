@@ -18,6 +18,7 @@ export default function House() {
   const handleAdd = () => {
     setEditingHouse(null);
     form.resetFields();
+    form.setFieldsValue({});
     form.setFieldsValue({ status: '自建房', usage: '自住' });
     setIsModalVisible(true);
   };
@@ -38,8 +39,15 @@ export default function House() {
   };
 
   const handleModalOk = async () => {
+    let values;
     try {
-      const values = await form.validateFields();
+      values = await form.validateFields();
+    } catch (error) {
+      console.error('Validate Failed:', error);
+      return;
+    }
+
+    try {
       if (editingHouse) {
         await updateHouse(editingHouse.id, values);
         message.success('更新成功');
@@ -49,7 +57,8 @@ export default function House() {
       }
       setIsModalVisible(false);
     } catch (error) {
-      console.error('Validate Failed:', error);
+      console.error('API call failed:', error);
+      message.error('操作失败，请重试');
     }
   };
 

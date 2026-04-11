@@ -29,7 +29,7 @@ interface MapLayerProps {
 }
 
 // 内部组件：负责控制地图交互行为
-function MapController({ selectedOrderId }: { selectedOrderId: number | null }) {
+function MapController({ selectedOrderId, markerRefs }: { selectedOrderId: number | null, markerRefs: React.MutableRefObject<{ [key: string]: L.Marker | null }> }) {
   const map = useMap();
   const { addresses, orders } = useStore();
   const initialFitDone = useRef(false);
@@ -37,14 +37,29 @@ function MapController({ selectedOrderId }: { selectedOrderId: number | null }) 
   // 1. 初始化时自动计算边界居中
   useEffect(() => {
     if (addresses.length > 0 && !initialFitDone.current) {
-      const bounds = L.latLngBounds(addresses.map(a => [a.latitude, a.longitude]));
-      // padding 留出左右面板的空间
-      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 17 });
+      // 过滤掉经纬度异常的脏数据 (假设莲麻村位于广东从化，大致范围为纬度 23~25，经度 113~114)
+      const validAddresses = addresses.filter(a => 
+        a.latitude > 23.0 && a.latitude < 25.0 && 
+        a.longitude > 113.0 && a.longitude < 114.5
+      );
+
+      if (validAddresses.length > 0) {
+        const bounds = L.latLngBounds(validAddresses.map(a => [a.latitude, a.longitude]));
+        // 使用非对称 padding，避开左右两侧各大约 400px+ 的面板遮挡
+        map.fitBounds(bounds, { 
+          paddingTopLeft: [450, 100], 
+          paddingBottomRight: [450, 50], 
+          maxZoom: 17 
+        });
+      } else {
+        // 如果没有合法坐标，提供一个默认兜底的飞行定位
+        map.flyTo([23.85, 113.89], 16);
+      }
       initialFitDone.current = true;
     }
   }, [addresses, map]);
 
-  // 2. 监听工单选中事件，平滑飞行定位
+  // 2. 监听工单选中事件，平滑飞行定位并打开弹窗
   useEffect(() => {
     if (selectedOrderId) {
       const order = orders.find(o => o.id === selectedOrderId);
@@ -54,10 +69,19 @@ function MapController({ selectedOrderId }: { selectedOrderId: number | null }) 
           map.flyTo([address.latitude, address.longitude], 18, {
             duration: 1.5
           });
+          
+          // 查找对应的 Marker 实例并强制打开 Popup 弹窗
+          const marker = markerRefs.current[address.id];
+          if (marker) {
+            // 等待飞行定位动画接近完成时再弹出，避免视觉突兀
+            setTimeout(() => {
+              marker.openPopup();
+            }, 500);
+          }
         }
       }
     }
-  }, [selectedOrderId, orders, addresses, map]);
+  }, [selectedOrderId, orders, addresses, map, markerRefs]);
 
   return null;
 }
@@ -65,6 +89,9 @@ function MapController({ selectedOrderId }: { selectedOrderId: number | null }) 
 export default function MapLayer({ selectedOrderId }: MapLayerProps) {
   const { addresses, orders } = useStore();
   const activeOrders = orders.filter(o => o.status !== '已销账');
+
+  // 存储所有 Marker 实例的引用，以 address.id 为 Key
+  const markerRefs = useRef<{ [key: string]: L.Marker | null }>({});
 
   // 如果没有配置 key，理论上 ScreenApp 会拦截，但为了安全起见这里也加个防御
   if (!hasTiandituKey) return null;
@@ -78,7 +105,7 @@ export default function MapLayer({ selectedOrderId }: MapLayerProps) {
         zoomControl={false}
         attributionControl={false}
       >
-        <MapController selectedOrderId={selectedOrderId} />
+        <MapController selectedOrderId={selectedOrderId} markerRefs={markerRefs} />
         
         {/* 天地图影像底图 */}
         <TileLayer
@@ -99,6 +126,9 @@ export default function MapLayer({ selectedOrderId }: MapLayerProps) {
               key={address.id} 
               position={[address.latitude, address.longitude]}
               icon={hasAlert ? alertIcon : normalIcon}
+              ref={(el) => {
+                markerRefs.current[address.id] = el;
+              }}
             >
               <Popup className="custom-popup" autoPan={false}>
                 <div className="font-bold text-gray-800 text-lg mb-1">{address.name}</div>

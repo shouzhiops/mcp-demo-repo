@@ -116,16 +116,24 @@ app.get('/api/addresses', async (req, res) => {
 });
 
 app.post('/api/addresses', async (req, res) => {
-  const data = req.body;
-  const address = await prisma.address.create({ data });
-  res.json(address);
+  try {
+    const data = req.body;
+    const address = await prisma.address.create({ data });
+    res.json(address);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 app.put('/api/addresses/:id', async (req, res) => {
-  const { id } = req.params;
-  const data = req.body;
-  const address = await prisma.address.update({ where: { id }, data });
-  res.json(address);
+  try {
+    const { id } = req.params;
+    const data = req.body;
+    const address = await prisma.address.update({ where: { id }, data });
+    res.json(address);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 app.delete('/api/addresses/:id', async (req, res) => {
@@ -134,7 +142,7 @@ app.delete('/api/addresses/:id', async (req, res) => {
     await prisma.address.delete({ where: { id } });
     res.json({ success: true });
   } catch (error: any) {
-    res.status(400).json({ error: 'Cannot delete address with associated records.' });
+    res.status(400).json({ error: error.message });
   }
 });
 
@@ -145,22 +153,34 @@ app.get('/api/populations', async (req, res) => {
 });
 
 app.post('/api/populations', async (req, res) => {
-  const data = req.body;
-  const pop = await prisma.population.create({ data });
-  res.json(pop);
+  try {
+    const data = req.body;
+    const pop = await prisma.population.create({ data });
+    res.json(pop);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 app.put('/api/populations/:id', async (req, res) => {
-  const { id } = req.params;
-  const data = req.body;
-  const pop = await prisma.population.update({ where: { id: Number(id) }, data });
-  res.json(pop);
+  try {
+    const { id } = req.params;
+    const data = req.body;
+    const pop = await prisma.population.update({ where: { id: Number(id) }, data });
+    res.json(pop);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 app.delete('/api/populations/:id', async (req, res) => {
-  const { id } = req.params;
-  await prisma.population.delete({ where: { id: Number(id) } });
-  res.json({ success: true });
+  try {
+    const { id } = req.params;
+    await prisma.population.delete({ where: { id: Number(id) } });
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 // ==================== House API ====================
@@ -172,22 +192,34 @@ app.get('/api/houses', async (req, res) => {
 });
 
 app.post('/api/houses', async (req, res) => {
-  const data = req.body;
-  const house = await prisma.house.create({ data });
-  res.json(house);
+  try {
+    const data = req.body;
+    const house = await prisma.house.create({ data });
+    res.json(house);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 app.put('/api/houses/:id', async (req, res) => {
-  const { id } = req.params;
-  const data = req.body;
-  const house = await prisma.house.update({ where: { id: Number(id) }, data });
-  res.json(house);
+  try {
+    const { id } = req.params;
+    const data = req.body;
+    const house = await prisma.house.update({ where: { id: Number(id) }, data });
+    res.json(house);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 app.delete('/api/houses/:id', async (req, res) => {
-  const { id } = req.params;
-  await prisma.house.delete({ where: { id: Number(id) } });
-  res.json({ success: true });
+  try {
+    const { id } = req.params;
+    await prisma.house.delete({ where: { id: Number(id) } });
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 // ==================== Unit API ====================
@@ -199,22 +231,34 @@ app.get('/api/units', async (req, res) => {
 });
 
 app.post('/api/units', async (req, res) => {
-  const data = req.body;
-  const unit = await prisma.unit.create({ data });
-  res.json(unit);
+  try {
+    const data = req.body;
+    const unit = await prisma.unit.create({ data });
+    res.json(unit);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 app.put('/api/units/:id', async (req, res) => {
-  const { id } = req.params;
-  const data = req.body;
-  const unit = await prisma.unit.update({ where: { id: Number(id) }, data });
-  res.json(unit);
+  try {
+    const { id } = req.params;
+    const data = req.body;
+    const unit = await prisma.unit.update({ where: { id: Number(id) }, data });
+    res.json(unit);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 app.delete('/api/units/:id', async (req, res) => {
-  const { id } = req.params;
-  await prisma.unit.delete({ where: { id: Number(id) } });
-  res.json({ success: true });
+  try {
+    const { id } = req.params;
+    await prisma.unit.delete({ where: { id: Number(id) } });
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 // ==================== Facility API ====================
@@ -226,22 +270,34 @@ app.get('/api/facilities', async (req, res) => {
 });
 
 app.post('/api/facilities', async (req, res) => {
-  const data = req.body;
-  const facility = await prisma.facility.create({ data });
-  res.json(facility);
+  try {
+    const data = req.body;
+    const facility = await prisma.facility.create({ data });
+    res.json(facility);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 app.put('/api/facilities/:id', async (req, res) => {
-  const { id } = req.params;
-  const data = req.body;
-  const facility = await prisma.facility.update({ where: { id: Number(id) }, data });
-  res.json(facility);
+  try {
+    const { id } = req.params;
+    const data = req.body;
+    const facility = await prisma.facility.update({ where: { id: Number(id) }, data });
+    res.json(facility);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 app.delete('/api/facilities/:id', async (req, res) => {
-  const { id } = req.params;
-  await prisma.facility.delete({ where: { id: Number(id) } });
-  res.json({ success: true });
+  try {
+    const { id } = req.params;
+    await prisma.facility.delete({ where: { id: Number(id) } });
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 // ==================== Order API ====================
@@ -253,22 +309,34 @@ app.get('/api/orders', async (req, res) => {
 });
 
 app.post('/api/orders', async (req, res) => {
-  const data = req.body;
-  const order = await prisma.order.create({ data });
-  res.json(order);
+  try {
+    const data = req.body;
+    const order = await prisma.order.create({ data });
+    res.json(order);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 app.put('/api/orders/:id', async (req, res) => {
-  const { id } = req.params;
-  const data = req.body;
-  const order = await prisma.order.update({ where: { id: Number(id) }, data });
-  res.json(order);
+  try {
+    const { id } = req.params;
+    const data = req.body;
+    const order = await prisma.order.update({ where: { id: Number(id) }, data });
+    res.json(order);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 app.delete('/api/orders/:id', async (req, res) => {
-  const { id } = req.params;
-  await prisma.order.delete({ where: { id: Number(id) } });
-  res.json({ success: true });
+  try {
+    const { id } = req.params;
+    await prisma.order.delete({ where: { id: Number(id) } });
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
 })
 
 // ==================== User API ====================
