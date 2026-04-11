@@ -1,0 +1,7 @@
+- [x] 后端 (`api/src/index.ts`) 已经正确实现了对 `Address`, `Population`, `House`, `Unit`, `Facility`, `Order` 的增 (`POST`)、删 (`DELETE`)、改 (`PUT`) 接口。
+- [x] 前端 `useStore` (`src/store/index.ts`) 中已经扩展并成功调用了对应的增删改请求方法，操作后能够自动刷新本地状态（如重新调用 `fetchXxx`）。
+- [x] 各台账页面（`Address.tsx`, `Population.tsx`, `House.tsx`, `Unit.tsx`, `Facility.tsx`）的“新增”按钮点击后能弹出 Ant Design 的 `Modal` 及其内部 `Form` 表单，且表单字段包含近期扩展的新字段（如身份证、产权人等）。
+- [x] 在各台账页面的表格右侧“操作”列中，点击“编辑”按钮能弹出带默认值的表单，提交后更新数据库。
+- [x] 在各台账页面的表格右侧“操作”列中，点击“删除”按钮会弹出 `Popconfirm` 确认框，确认后成功调用后端删除接口并刷新列表。
+- [x] 在隐患工单页面 (`Orders.tsx`)，操作列的业务动作（如“分拨工单”、“督办”、“审核销账”）点击后能够弹出状态修改表单或直接调用更新接口修改工单状态。
+- [x] 确保新增和编辑弹窗在提交前进行了基础的前端字段校验（如 `required` 规则）。
