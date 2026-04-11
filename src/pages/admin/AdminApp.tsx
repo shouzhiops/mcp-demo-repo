@@ -29,7 +29,7 @@ const { Header, Sider, Content } = Layout;
 export default function AdminApp() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { fetchAddresses, fetchOrders, fetchPopulations, fetchHouses, fetchUnits, fetchFacilities, currentUser } = useStore();
+  const { fetchAddresses, fetchOrders, fetchPopulations, fetchHouses, fetchUnits, fetchFacilities, currentUser, logout } = useStore();
 
   useEffect(() => {
     fetchAddresses();
@@ -39,6 +39,11 @@ export default function AdminApp() {
     fetchUnits();
     fetchFacilities();
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
 
   const allMenuItems = [
     { key: '/admin', icon: <DashboardOutlined />, label: '工作台概览' },
@@ -78,7 +83,10 @@ export default function AdminApp() {
           className="mt-4"
         />
         <div className="absolute bottom-0 w-full p-4 border-t border-gray-800">
-          <div className="flex items-center justify-center text-gray-400 hover:text-white cursor-pointer transition-colors px-2 py-2 rounded-md hover:bg-gray-800">
+          <div 
+            className="flex items-center justify-center text-gray-400 hover:text-white cursor-pointer transition-colors px-2 py-2 rounded-md hover:bg-gray-800"
+            onClick={handleLogout}
+          >
             <LogoutOutlined className="mr-2" />
             <span>退出</span>
           </div>
