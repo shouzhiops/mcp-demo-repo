@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
-import { Layout, Menu } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Layout, Menu, Dropdown, Modal, Form, Input, message } from 'antd';
+import type { MenuProps } from 'antd';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { 
   DashboardOutlined, 
@@ -11,7 +12,8 @@ import {
   AlertOutlined,
   UserOutlined,
   SafetyCertificateOutlined,
-  LogoutOutlined
+  LogoutOutlined,
+  DownOutlined
 } from '@ant-design/icons';
 import Dashboard from './Dashboard';
 import Address from './Address';
@@ -29,7 +31,10 @@ const { Header, Sider, Content } = Layout;
 export default function AdminApp() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { fetchAddresses, fetchOrders, fetchPopulations, fetchHouses, fetchUnits, fetchFacilities, currentUser, logout } = useStore();
+  const { fetchAddresses, fetchOrders, fetchPopulations, fetchHouses, fetchUnits, fetchFacilities, currentUser, logout, updateUser } = useStore();
+
+  const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
+  const [passwordForm] = Form.useForm();
 
   useEffect(() => {
     fetchAddresses();
@@ -43,6 +48,37 @@ export default function AdminApp() {
   const handleLogout = () => {
     logout();
     navigate('/login', { replace: true });
+  };
+
+  const handlePasswordSubmit = async (values: any) => {
+    if (!currentUser?.id) return;
+    try {
+      await updateUser(currentUser.id, { password: values.password } as any);
+      message.success('密码修改成功，请重新登录');
+      setIsPasswordModalVisible(false);
+      passwordForm.resetFields();
+      handleLogout();
+    } catch (error) {
+      console.error('修改密码失败', error);
+      message.error('修改密码失败，请重试');
+    }
+  };
+
+  const userMenuItems: MenuProps['items'] = [
+    { key: 'profile', label: '个人信息' },
+    { key: 'password', label: '修改密码' },
+    { type: 'divider' },
+    { key: 'logout', label: '退出登录', danger: true, icon: <LogoutOutlined /> },
+  ];
+
+  const handleUserMenuClick: MenuProps['onClick'] = ({ key }) => {
+    if (key === 'logout') {
+      handleLogout();
+    } else if (key === 'password') {
+      setIsPasswordModalVisible(true);
+    } else if (key === 'profile') {
+      message.info('个人信息功能开发中');
+    }
   };
 
   const allMenuItems = [
@@ -93,13 +129,16 @@ export default function AdminApp() {
         </div>
       </Sider>
       <Layout className="ml-[180px]">
-        <Header className="bg-white px-8 flex justify-between items-center shadow-sm sticky top-0 z-10">
-          <div className="text-gray-600 font-medium">欢迎回来，村委书记/内勤</div>
-          <div className="flex items-center gap-4">
-            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold shadow-md">
-              书
+        <Header className="bg-white px-8 flex justify-end items-center shadow-sm sticky top-0 z-10">
+          <Dropdown menu={{ items: userMenuItems, onClick: handleUserMenuClick }} placement="bottomRight" trigger={['click']}>
+            <div className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 px-3 py-1 rounded-md transition-colors">
+              <span className="text-gray-600 font-medium">欢迎回来，{currentUser?.name || '用户'}</span>
+              <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold shadow-md">
+                {currentUser?.name?.[0] || 'U'}
+              </div>
+              <DownOutlined className="text-gray-400 text-xs" />
             </div>
-          </div>
+          </Dropdown>
         </Header>
         <Content className="p-8 bg-gray-50/50 min-h-[calc(100vh-64px)]">
           <Routes>
@@ -115,6 +154,54 @@ export default function AdminApp() {
           </Routes>
         </Content>
       </Layout>
+
+      <Modal
+        title="修改密码"
+        open={isPasswordModalVisible}
+        onOk={() => passwordForm.submit()}
+        onCancel={() => {
+          setIsPasswordModalVisible(false);
+          passwordForm.resetFields();
+        }}
+        okText="确认"
+        cancelText="取消"
+        destroyOnClose
+      >
+        <Form
+          form={passwordForm}
+          layout="vertical"
+          onFinish={handlePasswordSubmit}
+        >
+          <Form.Item
+            name="password"
+            label="新密码"
+            rules={[
+              { required: true, message: '请输入新密码' },
+              { min: 6, message: '密码长度不能少于6位' }
+            ]}
+          >
+            <Input.Password placeholder="请输入新密码" />
+          </Form.Item>
+          <Form.Item
+            name="confirmPassword"
+            label="确认新密码"
+            dependencies={['password']}
+            rules={[
+              { required: true, message: '请确认新密码' },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue('password') === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('两次输入的密码不匹配!'));
+                },
+              }),
+            ]}
+          >
+            <Input.Password placeholder="请再次输入新密码" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </Layout>
   );
 }
