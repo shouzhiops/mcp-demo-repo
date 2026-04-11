@@ -4,7 +4,7 @@ import { Search, ClipboardCheck, AlertCircle, Clock, CheckCircle, AlertTriangle,
 import { Incident } from '../../types';
 
 export default function Incidents() {
-  const { incidents, updateIncidentStatus, updateIncident } = useStore();
+  const { incidents, updateIncidentStatus, updateIncident, showToast } = useStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -34,6 +34,7 @@ export default function Incidents() {
     if (selectedIncident && assignee.trim() !== '') {
       updateIncident(selectedIncident.id, { assignedTo: assignee });
       updateIncidentStatus(selectedIncident.id, '处理中');
+      showToast(`✅ 工单 ${selectedIncident.id} 已成功派发给 ${assignee}`, 'success');
       setDispatchModalOpen(false);
     }
   };
@@ -41,6 +42,7 @@ export default function Incidents() {
   const handleCloseConfirm = () => {
     if (selectedIncident) {
       updateIncidentStatus(selectedIncident.id, '已结案');
+      showToast(`✅ 工单 ${selectedIncident.id} 已成功结案`, 'success');
       setCloseModalOpen(false);
     }
   };
@@ -83,10 +85,10 @@ export default function Incidents() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none transition-all cursor-pointer hover:bg-gray-700"
           >
-            <option value="all">所有状态</option>
-            <option value="待处理">待处理</option>
-            <option value="处理中">处理中</option>
-            <option value="已结案">已结案</option>
+            <option value="all" className="bg-gray-800 text-white">所有状态</option>
+            <option value="待处理" className="bg-gray-800 text-white">待处理</option>
+            <option value="处理中" className="bg-gray-800 text-white">处理中</option>
+            <option value="已结案" className="bg-gray-800 text-white">已结案</option>
           </select>
         </div>
       </div>

@@ -37,8 +37,11 @@ interface AppState {
   population: PopulationData[];
   facilities: FacilityData[];
   incidents: Incident[];
+  toast: { message: string; visible: boolean; type: 'success' | 'error' | 'info' };
   
   refreshData: () => void;
+  showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
+  hideToast: () => void;
   
   // Incident actions
   addIncident: (incident: Omit<Incident, 'id' | 'createTime'>) => void;
@@ -62,6 +65,7 @@ export const useStore = create<AppState>((set) => ({
   population: getPopulation(),
   facilities: getFacilities(),
   incidents: mockIncidents,
+  toast: { message: '', visible: false, type: 'success' },
   
   refreshData: () => {
     // In a real app, this would fetch from an API
@@ -72,6 +76,12 @@ export const useStore = create<AppState>((set) => ({
       // incidents are mock data, optionally we could reset them here
     });
   },
+
+  showToast: (message, type = 'success') => {
+    set({ toast: { message, visible: true, type } });
+  },
+
+  hideToast: () => set((state) => ({ toast: { ...state.toast, visible: false } })),
 
   // Incident methods
   addIncident: (incidentData) => {

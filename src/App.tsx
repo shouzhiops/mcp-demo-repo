@@ -7,6 +7,7 @@ import MobileHome from './pages/mobile/Home';
 import MobileReport from './pages/mobile/Report';
 import MobileTasks from './pages/mobile/Tasks';
 import Home from './pages/Home';
+import Toast from './components/Toast';
 import { LayoutDashboard, FileText, Smartphone, Inbox } from 'lucide-react';
 import { useStore } from './store';
 
@@ -98,6 +99,7 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
 function App() {
   return (
     <Router>
+      <Toast />
       <Routes>
         {/* 角色入口选择页 */}
         <Route path="/" element={<Home />} />

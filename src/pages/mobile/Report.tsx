@@ -59,7 +59,7 @@ const MobileReport: React.FC = () => {
   }
 
   return (
-    <div className="p-4 bg-gray-50 h-full">
+    <div className="p-4 bg-gray-50 min-h-full pb-24">
       <div className="bg-white p-6 rounded-2xl shadow-sm space-y-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-gray-800">隐患上报</h2>
@@ -106,17 +106,19 @@ const MobileReport: React.FC = () => {
             </div>
           </div>
 
-          <button 
-            type="submit"
-            disabled={isSubmitting || !formData.title || !formData.desc}
-            className={`w-full py-3.5 rounded-xl text-white font-medium text-lg transition-all ${
-              isSubmitting || !formData.title || !formData.desc 
-                ? 'bg-indigo-300 cursor-not-allowed' 
-                : 'bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-200'
-            }`}
-          >
-            {isSubmitting ? '提交中...' : '确认上报'}
-          </button>
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-lg z-50">
+            <button 
+              type="submit"
+              disabled={isSubmitting || !formData.title || !formData.desc}
+              className={`w-full py-3.5 rounded-xl text-white font-medium text-lg transition-all ${
+                isSubmitting || !formData.title || !formData.desc 
+                  ? 'bg-indigo-300 cursor-not-allowed' 
+                  : 'bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-200'
+              }`}
+            >
+              {isSubmitting ? '提交中...' : '确认上报'}
+            </button>
+          </div>
         </form>
       </div>
     </div>

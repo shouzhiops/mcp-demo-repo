@@ -1,5 +1,6 @@
 import { useStore } from '../store';
 import ReactECharts from 'echarts-for-react';
+import * as echarts from 'echarts';
 import { AlertTriangle, Users, Home, Activity } from 'lucide-react';
 
 export default function Dashboard() {
@@ -45,7 +46,10 @@ export default function Dashboard() {
       data: Object.values(migrantWorkersByGroup),
       type: 'bar',
       itemStyle: {
-        color: '#4fd1c5',
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: '#4fd1c5' },
+          { offset: 1, color: '#319795' }
+        ]),
         borderRadius: [4, 4, 0, 0]
       }
     }]

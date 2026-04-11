@@ -33,12 +33,12 @@ export default function Ledger() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none transition-all cursor-pointer hover:bg-gray-700"
           >
-            <option value="all">所有状态</option>
-            <option value="自住">自住</option>
-            <option value="空置">空置</option>
-            <option value="危房">危房</option>
-            <option value="出租">出租</option>
-            <option value="闲置">闲置</option>
+            <option value="all" className="bg-gray-800 text-white">所有状态</option>
+            <option value="自住" className="bg-gray-800 text-white">自住</option>
+            <option value="空置" className="bg-gray-800 text-white">空置</option>
+            <option value="危房" className="bg-gray-800 text-white">危房</option>
+            <option value="出租" className="bg-gray-800 text-white">出租</option>
+            <option value="闲置" className="bg-gray-800 text-white">闲置</option>
           </select>
         </div>
       </div>

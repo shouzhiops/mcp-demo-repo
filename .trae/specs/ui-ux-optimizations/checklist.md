@@ -1,0 +1,4 @@
+- [x] Dashboard 中的柱状图使用了渐变色。
+- [x] Ledger 和 Incidents 页面中的 select 下拉选项具有深色背景。
+- [x] Mobile Report 页面中的确认上报按钮吸附在屏幕底部。
+- [x] Incidents 页面中进行派发或结案操作后会弹出 Toast 成功提示。
