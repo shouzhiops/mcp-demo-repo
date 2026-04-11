@@ -1,10 +1,17 @@
 import React from 'react';
-import { NavBar, Grid, Card } from 'antd-mobile';
+import { NavBar, Grid, Card, Badge } from 'antd-mobile';
 import { Camera, Users, ClipboardList, MapPin, Home as HomeIcon, Building2, Wrench, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useStore } from '../../store';
 
 export default function Home() {
   const navigate = useNavigate();
+  const orders = useStore(state => state.orders);
+
+  const handlerId = 101;
+  const availableTasks = orders.filter(order => order.status === '待分拨' || order.handlerId === handlerId);
+  const pendingTasks = availableTasks.filter(task => task.status !== '已处置' && task.status !== '已销账');
+  const pendingCount = pendingTasks.length;
 
   const menuItems = [
     {
@@ -20,7 +27,8 @@ export default function Home() {
     {
       title: '待办工单',
       icon: <ClipboardList className="w-8 h-8 text-orange-500" />,
-      path: '/mobile/tasks'
+      path: '/mobile/tasks',
+      badge: pendingCount > 0 ? pendingCount : null
     }
   ];
 
@@ -53,7 +61,8 @@ export default function Home() {
     {
       title: '工单',
       icon: <ClipboardList className="w-8 h-8 text-red-500" />,
-      path: '/mobile/tasks'
+      path: '/mobile/tasks',
+      badge: pendingCount > 0 ? pendingCount : null
     }
   ];
 
@@ -78,7 +87,11 @@ export default function Home() {
               <Grid.Item key={index} onClick={() => navigate(item.path)}>
                 <div className="flex flex-col items-center justify-center p-3 active:bg-gray-50 rounded-lg transition-colors">
                   <div className="mb-2 bg-gray-50 p-3 rounded-full shadow-sm">
-                    {item.icon}
+                    {item.badge ? (
+                      <Badge content={item.badge}>{item.icon}</Badge>
+                    ) : (
+                      item.icon
+                    )}
                   </div>
                   <span className="text-sm text-gray-700 font-medium">{item.title}</span>
                 </div>
@@ -93,7 +106,11 @@ export default function Home() {
               <Grid.Item key={index} onClick={() => navigate(item.path)}>
                 <div className="flex flex-col items-center justify-center p-3 active:bg-gray-50 rounded-lg transition-colors">
                   <div className="mb-2 bg-gray-50 p-3 rounded-full shadow-sm">
-                    {item.icon}
+                    {item.badge ? (
+                      <Badge content={item.badge}>{item.icon}</Badge>
+                    ) : (
+                      item.icon
+                    )}
                   </div>
                   <span className="text-sm text-gray-700 font-medium">{item.title}</span>
                 </div>

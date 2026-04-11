@@ -9,6 +9,7 @@ import Addresses from './Addresses';
 import Houses from './Houses';
 import Units from './Units';
 import Facilities from './Facilities';
+import Populations from './Populations';
 import { useStore } from '../../store';
 
 export default function MobileApp() {
@@ -29,6 +30,7 @@ export default function MobileApp() {
           <Route path="/report" element={<Report />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/populations" element={<Populations />} />
           <Route path="/addresses" element={<Addresses />} />
           <Route path="/houses" element={<Houses />} />
           <Route path="/units" element={<Units />} />

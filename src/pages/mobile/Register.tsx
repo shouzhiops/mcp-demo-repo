@@ -98,10 +98,15 @@ export default function Register() {
             <Form.Item name="name" label="姓名" rules={[{ required: true, message: '请输入姓名' }]}>
               <Input placeholder="请输入姓名" clearable />
             </Form.Item>
-            <Form.Item name="phone" label="联系电话" rules={[{ required: true, message: '请输入手机号' }]}>
+            <Form.Item name="phone" label="联系电话" rules={[
+              { required: true, message: '请输入手机号' },
+              { pattern: /^1[3-9]\d{9}$/, message: '请输入有效的11位手机号' }
+            ]}>
               <Input placeholder="请输入手机号" type="phone" clearable />
             </Form.Item>
-            <Form.Item name="idCard" label="身份证号">
+            <Form.Item name="idCard" label="身份证号" rules={[
+              { pattern: /^[1-9]\d{5}(18|19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[\dXx]$/, message: '请输入有效的18位身份证号' }
+            ]}>
               <Input placeholder="请输入身份证号" clearable />
             </Form.Item>
           </div>

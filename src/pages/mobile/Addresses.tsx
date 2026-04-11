@@ -1,22 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavBar, Form, Input, Popup, Button, Toast } from 'antd-mobile';
 import { MapPin, Plus, Search, Map } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useStore } from '../../store';
 
 export default function Addresses() {
   const navigate = useNavigate();
   const [addVisible, setAddVisible] = useState(false);
-  const [addresses, setAddresses] = useState([
-    { id: 1, name: '朝阳区三里屯街道1号院', type: '居住区', status: '已核实' },
-    { id: 2, name: '海淀区中关村大街27号', type: '商业区', status: '待核实' },
-    { id: 3, name: '西城区金融大街甲9号', type: '办公区', status: '已核实' },
-  ]);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  
+  const { addresses, addAddress, fetchAddresses } = useStore();
 
-  const onAdd = (values: any) => {
-    setAddresses([{ id: Date.now(), ...values, status: '待核实' }, ...addresses]);
-    setAddVisible(false);
-    Toast.show({ icon: 'success', content: '添加成功' });
+  useEffect(() => {
+    fetchAddresses();
+  }, [fetchAddresses]);
+
+  const onAdd = async (values: any) => {
+    try {
+      await addAddress({
+        ...values,
+        longitude: 0,
+        latitude: 0,
+      });
+      setAddVisible(false);
+      Toast.show({ icon: 'success', content: '添加成功' });
+    } catch (error) {
+      Toast.show({ icon: 'fail', content: '添加失败' });
+    }
   };
+
+  const filteredAddresses = addresses.filter(addr => 
+    (addr.name && addr.name.toLowerCase().includes(searchKeyword.toLowerCase())) ||
+    (addr.type && addr.type.toLowerCase().includes(searchKeyword.toLowerCase()))
+  );
 
   return (
     <div className="bg-[#F2F2F7] min-h-screen pb-safe">
@@ -43,13 +59,15 @@ export default function Addresses() {
             type="text" 
             placeholder="搜索地址..." 
             className="bg-transparent border-none outline-none w-full text-[15px] text-gray-800 placeholder-gray-400"
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
           />
         </div>
       </div>
 
       {/* 列表区 */}
       <div className="px-4 pb-6 space-y-3">
-        {addresses.map(addr => (
+        {filteredAddresses.map(addr => (
           <div 
             key={addr.id} 
             className="bg-white rounded-2xl p-4 shadow-sm active:scale-[0.98] active:bg-gray-50 transition-all duration-200 cursor-pointer"
@@ -70,11 +88,11 @@ export default function Addresses() {
                 </div>
               </div>
               <span className={`text-[12px] px-2.5 py-1 rounded-lg shrink-0 font-medium ${
-                addr.status === '已核实' 
+                (addr as any).status === '已核实' || (addr as any).level === '已核实'
                   ? 'bg-green-50 text-green-600' 
                   : 'bg-orange-50 text-orange-600'
               }`}>
-                {addr.status}
+                {(addr as any).status || (addr as any).level || '待核实'}
               </span>
             </div>
           </div>

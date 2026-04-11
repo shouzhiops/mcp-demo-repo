@@ -1,49 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavBar, ActionSheet, Toast } from 'antd-mobile';
 import { Wrench, Search, AlertCircle, CheckCircle2, MoreVertical, MapPin, Zap, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useStore } from '../../store';
 
 export default function Facilities() {
   const navigate = useNavigate();
-  const [facilities, setFacilities] = useState([
-    { 
-      id: 1, 
-      name: '消防栓 XF-001', 
-      type: '消防设施', 
-      location: '1号楼A座入口处',
-      lastCheck: '2023-10-15',
-      status: '正常' 
-    },
-    { 
-      id: 2, 
-      name: '配电箱 PD-204', 
-      type: '电力设施', 
-      location: '地下2层设备间',
-      lastCheck: '2023-10-10',
-      status: '维修中' 
-    },
-    { 
-      id: 3, 
-      name: '监控摄像头 Cam-05', 
-      type: '安防设施', 
-      location: '园区东门入口',
-      lastCheck: '2023-10-16',
-      status: '故障' 
-    },
-  ]);
+  const { facilities, fetchFacilities, updateFacility } = useStore();
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  useEffect(() => {
+    fetchFacilities();
+  }, [fetchFacilities]);
+
+  const filteredFacilities = facilities.filter(f => 
+    (f.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (f.id.toString()).includes(searchQuery)
+  );
 
   const [actionSheetVisible, setActionSheetVisible] = useState(false);
   const [currentFacilityId, setCurrentFacilityId] = useState<number | null>(null);
 
-  const handleStatusChange = (status: string) => {
-    setFacilities(facilities.map(f => 
-      f.id === currentFacilityId ? { ...f, status } : f
-    ));
-    setActionSheetVisible(false);
-    Toast.show({
-      icon: 'success',
-      content: '状态已更新',
-    });
+  const handleStatusChange = async (status: string) => {
+    if (currentFacilityId === null) return;
+    try {
+      await updateFacility(currentFacilityId, { status });
+      setActionSheetVisible(false);
+      Toast.show({
+        icon: 'success',
+        content: '状态已更新',
+      });
+    } catch (error) {
+      Toast.show({
+        icon: 'fail',
+        content: '更新失败',
+      });
+    }
   };
 
   const statusColors = {
@@ -87,6 +79,8 @@ export default function Facilities() {
           <input 
             type="text" 
             placeholder="搜索设施编号或名称..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="bg-transparent border-none outline-none w-full text-[15px] text-gray-800 placeholder-gray-400"
           />
         </div>
@@ -94,7 +88,7 @@ export default function Facilities() {
 
       {/* 列表区 */}
       <div className="px-4 pb-6 space-y-3">
-        {facilities.map(facility => (
+        {filteredFacilities.map(facility => (
           <div 
             key={facility.id} 
             className="bg-white rounded-2xl p-4 shadow-sm active:scale-[0.98] transition-all duration-200"
@@ -126,15 +120,15 @@ export default function Facilities() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center text-[13px] text-gray-600">
                   <MapPin className="w-4 h-4 mr-1.5 text-gray-400" />
-                  <span className="truncate">{facility.location}</span>
+                  <span className="truncate">{facility.address?.name || '暂无位置'}</span>
                 </div>
-                <span className={`text-[12px] px-2.5 py-1 rounded-lg font-medium shrink-0 ${statusColors[facility.status as keyof typeof statusColors]}`}>
-                  {facility.status}
+                <span className={`text-[12px] px-2.5 py-1 rounded-lg font-medium shrink-0 ${statusColors[(facility.status as keyof typeof statusColors) || '正常'] || statusColors['正常']}`}>
+                  {facility.status || '正常'}
                 </span>
               </div>
               <div className="flex items-center justify-between text-[12px] text-gray-400 border-t border-gray-200/50 pt-2">
-                <span>最近巡检: {facility.lastCheck}</span>
-                {facility.status === '正常' ? (
+                <span>责任人: {facility.manager || '未知'}</span>
+                {(!facility.status || facility.status === '正常') ? (
                   <CheckCircle2 className="w-4 h-4 text-teal-500" />
                 ) : (
                   <AlertCircle className="w-4 h-4 text-orange-400" />
@@ -143,6 +137,11 @@ export default function Facilities() {
             </div>
           </div>
         ))}
+        {filteredFacilities.length === 0 && (
+          <div className="text-center py-10 text-gray-400">
+            暂无匹配的设施
+          </div>
+        )}
       </div>
 
       {/* 状态更新 ActionSheet */}

@@ -1,5 +1,5 @@
-import React from 'react';
-import { NavBar, Tag, Button, Empty, Toast, Dialog } from 'antd-mobile';
+import React, { useState } from 'react';
+import { NavBar, Tag, Button, Empty, Toast, Dialog, Popup, Image } from 'antd-mobile';
 import { ClockCircleOutline, CheckCircleOutline } from 'antd-mobile-icons';
 import { MapPin, AlertCircle, FileText, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +10,9 @@ export default function Tasks() {
   const orders = useStore(state => state.orders);
   const updateOrderStatus = useStore(state => state.updateOrderStatus);
   const addresses = useStore(state => state.addresses);
+
+  const [popupVisible, setPopupVisible] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
 
   const handlerId = 101;
   const availableTasks = orders.filter(order => order.status === '待分拨' || order.handlerId === handlerId);
@@ -46,11 +49,20 @@ export default function Tasks() {
     });
   };
 
+  const handleTaskClick = (task: any) => {
+    setSelectedTask(task);
+    setPopupVisible(true);
+  };
+
   const renderTask = (task: any, isCompleted: boolean) => {
     const isPendingAccept = task.status === '待分拨';
     
     return (
-      <div key={task.id} className="bg-white mx-4 my-3 rounded-2xl p-4 shadow-sm border border-gray-100/80 transition-all hover:shadow-md">
+      <div 
+        key={task.id} 
+        className="bg-white mx-4 my-3 rounded-2xl p-4 shadow-sm border border-gray-100/80 transition-all hover:shadow-md cursor-pointer"
+        onClick={() => handleTaskClick(task)}
+      >
         <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-100">
           <div className="flex items-center space-x-2">
             <span className="font-semibold text-gray-800 text-lg tracking-tight">
@@ -89,7 +101,7 @@ export default function Tasks() {
                 size="small" 
                 color="primary"
                 fill="solid"
-                onClick={() => handleAccept(task.id)}
+                onClick={(e) => { e.stopPropagation(); handleAccept(task.id); }}
                 className="rounded-xl px-6 shadow-sm font-medium"
               >
                 接单
@@ -99,7 +111,7 @@ export default function Tasks() {
                 size="small" 
                 color="success"
                 fill="solid"
-                onClick={() => handleMarkComplete(task.id)}
+                onClick={(e) => { e.stopPropagation(); handleMarkComplete(task.id); }}
                 className="rounded-xl px-6 shadow-sm font-medium flex items-center justify-center gap-1"
               >
                 <CheckCircle2 className="w-4 h-4" />
@@ -144,6 +156,42 @@ export default function Tasks() {
           </div>
         )}
       </div>
+
+      <Popup
+        visible={popupVisible}
+        onMaskClick={() => setPopupVisible(false)}
+        bodyStyle={{ minHeight: '40vh', borderTopLeftRadius: '16px', borderTopRightRadius: '16px', padding: '16px' }}
+      >
+        {selectedTask && (
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <span className="font-semibold text-lg">{selectedTask.type}</span>
+              <Tag color={selectedTask.status === '已处置' || selectedTask.status === '已销账' ? 'success' : selectedTask.status === '待分拨' ? 'primary' : 'warning'}>
+                {selectedTask.status}
+              </Tag>
+            </div>
+            <div className="space-y-3 text-sm text-gray-700">
+              <p><strong>工单编号：</strong> #{selectedTask.id}</p>
+              <p><strong>位置信息：</strong> {getAddressName(selectedTask.addressId)}</p>
+              <p><strong>详细描述：</strong> {selectedTask.description || '无详细描述'}</p>
+              <p><strong>上报时间：</strong> {new Date(selectedTask.createdAt).toLocaleString()}</p>
+              {selectedTask.images && selectedTask.images.length > 0 && (
+                <div>
+                  <strong>现场照片：</strong>
+                  <div className="flex gap-2 mt-2 flex-wrap">
+                    {selectedTask.images.map((img: string, i: number) => (
+                      <Image key={i} src={img} width={80} height={80} fit="cover" className="rounded-lg" />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <Button block color="primary" className="mt-6" onClick={() => setPopupVisible(false)}>
+              关闭
+            </Button>
+          </div>
+        )}
+      </Popup>
     </div>
   );
 }

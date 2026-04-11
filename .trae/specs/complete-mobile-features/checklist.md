@@ -1,0 +1,10 @@
+- [x] `Home.tsx` 能够正确显示待办工单的动态数量。
+- [x] `Mine.tsx` 点击退出登录能弹出确认框。
+- [x] `Report.tsx` 点击定位能够触发浏览器真实的 GPS 请求。
+- [x] `Tasks.tsx` 点击工单可弹出显示详情内容的对话框/Popup。
+- [x] `Register.tsx` 提交时对不合法的身份证号和手机号会给出报错提示。
+- [x] `Populations.tsx` (人口列表) 能正常渲染，并支持根据姓名或身份证号搜索。
+- [x] `Addresses.tsx` 数据已持久化至 Store，顶部搜索框过滤功能正常。
+- [x] `Houses.tsx` 支持搜索，且提供新增房屋的交互入口。
+- [x] `Units.tsx` 告别空白页，具备了列表展示、搜索和新增功能。
+- [x] `Facilities.tsx` 状态修改生效，且支持搜索功能。

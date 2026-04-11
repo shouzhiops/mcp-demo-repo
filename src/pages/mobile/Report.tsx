@@ -47,9 +47,51 @@ export default function Report() {
   };
 
   const handleGetLocation = () => {
-    const randomAddress = addresses[Math.floor(Math.random() * addresses.length)];
-    form.setFieldsValue({ addressId: randomAddress.id });
-    Toast.show('已获取当前位置');
+    if (!navigator.geolocation) {
+      Toast.show('浏览器不支持地理定位');
+      return;
+    }
+
+    Toast.show({
+      icon: 'loading',
+      content: '获取位置中...',
+      duration: 0,
+    });
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        if (addresses.length > 0) {
+          // 找到最近的地址
+          let closest = addresses[0];
+          let minDistance = Number.MAX_VALUE;
+          
+          addresses.forEach(addr => {
+            const dx = addr.longitude - longitude;
+            const dy = addr.latitude - latitude;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < minDistance) {
+              minDistance = distance;
+              closest = addr;
+            }
+          });
+
+          form.setFieldsValue({ addressId: closest.id });
+          Toast.clear();
+          Toast.show('已获取当前位置');
+        } else {
+          Toast.clear();
+          Toast.show('未找到可用地址');
+        }
+      },
+      (error) => {
+        Toast.clear();
+        Toast.show('获取位置失败');
+        console.error(error);
+      },
+      { enableHighAccuracy: true }
+    );
   };
 
   return (
