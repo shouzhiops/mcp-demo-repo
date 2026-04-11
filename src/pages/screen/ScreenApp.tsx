@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -19,7 +19,16 @@ const createIcon = (hasAlert: boolean) => {
 };
 
 const ScreenApp: React.FC = () => {
-  const { addresses, orders } = useStore();
+  const { addresses, orders, fetchAddresses, fetchOrders } = useStore();
+
+  useEffect(() => {
+    fetchAddresses();
+    fetchOrders();
+    const interval = setInterval(() => {
+      fetchOrders();
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const activeOrders = useMemo(() => {
     return orders.filter(o => o.status !== '已销账');

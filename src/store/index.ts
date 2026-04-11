@@ -1,4 +1,7 @@
 import { create } from 'zustand';
+import axios from 'axios';
+
+const API_URL = 'http://localhost:3000/api';
 
 export interface Order {
   id: number;
@@ -10,6 +13,7 @@ export interface Order {
   images?: string[];
   createdAt: string;
   updatedAt: string;
+  address?: Address;
 }
 
 export interface Address {
@@ -17,58 +21,88 @@ export interface Address {
   name: string;
   longitude: number;
   latitude: number;
+  orders?: Order[];
+}
+
+export interface Population {
+  id: number;
+  name: string;
+  type: string;
+  phone: string;
+  addressId: string;
+  address?: Address;
 }
 
 interface StoreState {
   orders: Order[];
   addresses: Address[];
-  addOrder: (order: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateOrderStatus: (id: number, status: Order['status'], handlerId?: number) => void;
+  populations: Population[];
+  loading: boolean;
+  fetchAddresses: () => Promise<void>;
+  fetchOrders: () => Promise<void>;
+  fetchPopulations: () => Promise<void>;
+  addOrder: (order: Omit<Order, 'id' | 'createdAt' | 'updatedAt' | 'address'>) => Promise<void>;
+  updateOrderStatus: (id: number, status: Order['status'], handlerId?: number) => Promise<void>;
 }
 
 export const useStore = create<StoreState>((set) => ({
-  orders: [
-    {
-      id: 1,
-      type: '危房裂缝',
-      status: '待分拨',
-      addressId: '新华村-1组-001号',
-      description: '房屋后墙出现明显裂缝',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: 2,
-      type: '防溺水牌倾倒',
-      status: '待处置',
-      addressId: '新华村-2组-002号',
-      handlerId: 101,
-      description: '水库边的防溺水警示牌被风刮倒',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+  orders: [],
+  addresses: [],
+  populations: [],
+  loading: false,
+  
+  fetchAddresses: async () => {
+    set({ loading: true });
+    try {
+      const response = await axios.get(`${API_URL}/addresses`);
+      set({ addresses: response.data, loading: false });
+    } catch (error) {
+      console.error('Error fetching addresses:', error);
+      set({ loading: false });
     }
-  ],
-  addresses: [
-    { id: '新华村-1组-001号', name: '张三家', longitude: 116.4, latitude: 39.9 },
-    { id: '新华村-2组-002号', name: '村口水库', longitude: 116.41, latitude: 39.91 },
-    { id: '新华村-3组-015号', name: '李四家', longitude: 116.42, latitude: 39.92 },
-  ],
-  addOrder: (order) => set((state) => ({
-    orders: [
-      ...state.orders,
-      {
-        ...order,
-        id: state.orders.length + 1,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-    ]
-  })),
-  updateOrderStatus: (id, status, handlerId) => set((state) => ({
-    orders: state.orders.map(order => 
-      order.id === id 
-        ? { ...order, status, handlerId: handlerId ?? order.handlerId, updatedAt: new Date().toISOString() }
-        : order
-    )
-  }))
+  },
+
+  fetchOrders: async () => {
+    set({ loading: true });
+    try {
+      const response = await axios.get(`${API_URL}/orders`);
+      set({ orders: response.data, loading: false });
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      set({ loading: false });
+    }
+  },
+
+  fetchPopulations: async () => {
+    set({ loading: true });
+    try {
+      const response = await axios.get(`${API_URL}/populations`);
+      set({ populations: response.data, loading: false });
+    } catch (error) {
+      console.error('Error fetching populations:', error);
+      set({ loading: false });
+    }
+  },
+
+  addOrder: async (order) => {
+    try {
+      await axios.post(`${API_URL}/orders`, order);
+      // Fetch latest orders after adding
+      const response = await axios.get(`${API_URL}/orders`);
+      set({ orders: response.data });
+    } catch (error) {
+      console.error('Error adding order:', error);
+    }
+  },
+
+  updateOrderStatus: async (id, status, handlerId) => {
+    try {
+      await axios.patch(`${API_URL}/orders/${id}`, { status, handlerId });
+      // Fetch latest orders after updating
+      const response = await axios.get(`${API_URL}/orders`);
+      set({ orders: response.data });
+    } catch (error) {
+      console.error('Error updating order:', error);
+    }
+  }
 }));

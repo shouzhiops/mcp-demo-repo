@@ -1,22 +1,37 @@
+import React, { useEffect } from 'react';
 import { Layout, Menu } from 'antd';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { HomeOutlined, EnvironmentOutlined, UserOutlined, FileTextOutlined } from '@ant-design/icons';
+import { 
+  DashboardOutlined, 
+  EnvironmentOutlined, 
+  TeamOutlined, 
+  AlertOutlined,
+  LogoutOutlined
+} from '@ant-design/icons';
 import Dashboard from './Dashboard';
 import Address from './Address';
 import Population from './Population';
 import Orders from './Orders';
+import { useStore } from '../../store';
 
 const { Header, Sider, Content } = Layout;
 
 export default function AdminApp() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { fetchAddresses, fetchOrders, fetchPopulations } = useStore();
+
+  useEffect(() => {
+    fetchAddresses();
+    fetchOrders();
+    fetchPopulations();
+  }, []);
 
   const menuItems = [
-    { key: '/admin', icon: <HomeOutlined />, label: '工作台' },
-    { key: '/admin/address', icon: <EnvironmentOutlined />, label: '标准地址' },
-    { key: '/admin/population', icon: <UserOutlined />, label: '实有人口' },
-    { key: '/admin/orders', icon: <FileTextOutlined />, label: '隐患分拨调度' },
+    { key: '/admin', icon: <DashboardOutlined />, label: '工作台概览' },
+    { key: '/admin/address', icon: <EnvironmentOutlined />, label: '标准地址台账' },
+    { key: '/admin/population', icon: <TeamOutlined />, label: '实有人口台账' },
+    { key: '/admin/orders', icon: <AlertOutlined />, label: '隐患分拨调度' },
   ];
 
   return (
