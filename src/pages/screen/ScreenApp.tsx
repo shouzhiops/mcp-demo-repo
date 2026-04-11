@@ -125,8 +125,8 @@ const ScreenApp: React.FC = () => {
       {/* Map Background */}
       <div className="absolute inset-0 z-0">
         <MapContainer 
-          center={[39.9, 116.4]} 
-          zoom={13} 
+          center={[23.85, 113.89]} 
+          zoom={16} 
           style={{ height: '100%', width: '100%', background: '#020617' }}
           zoomControl={false}
         >

@@ -42,6 +42,55 @@ app.get('/api/populations', async (req, res) => {
   }
 });
 
+// 获取所有房屋数据
+app.get('/api/houses', async (req, res) => {
+  try {
+    const houses = await prisma.house.findMany({
+      include: {
+        address: {
+          include: {
+            populations: true
+          }
+        }
+      }
+    });
+    res.json(houses);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch houses' });
+  }
+});
+
+// 获取所有单位数据
+app.get('/api/units', async (req, res) => {
+  try {
+    const units = await prisma.unit.findMany({
+      include: {
+        address: true
+      }
+    });
+    res.json(units);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch units' });
+  }
+});
+
+// 获取所有设施数据
+app.get('/api/facilities', async (req, res) => {
+  try {
+    const facilities = await prisma.facility.findMany({
+      include: {
+        address: true
+      }
+    });
+    res.json(facilities);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch facilities' });
+  }
+});
+
 // 获取所有工单数据
 app.get('/api/orders', async (req, res) => {
   try {

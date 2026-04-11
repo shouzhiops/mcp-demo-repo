@@ -33,14 +33,41 @@ export interface Population {
   address?: Address;
 }
 
+export interface House {
+  id: number;
+  status: string;
+  addressId: string;
+  address?: Address;
+}
+
+export interface Unit {
+  id: number;
+  name: string;
+  addressId: string;
+  address?: Address;
+}
+
+export interface Facility {
+  id: number;
+  type: string;
+  addressId: string;
+  address?: Address;
+}
+
 interface StoreState {
   orders: Order[];
   addresses: Address[];
   populations: Population[];
+  houses: House[];
+  units: Unit[];
+  facilities: Facility[];
   loading: boolean;
   fetchAddresses: () => Promise<void>;
   fetchOrders: () => Promise<void>;
   fetchPopulations: () => Promise<void>;
+  fetchHouses: () => Promise<void>;
+  fetchUnits: () => Promise<void>;
+  fetchFacilities: () => Promise<void>;
   addOrder: (order: Omit<Order, 'id' | 'createdAt' | 'updatedAt' | 'address'>) => Promise<void>;
   updateOrderStatus: (id: number, status: Order['status'], handlerId?: number) => Promise<void>;
 }
@@ -49,6 +76,9 @@ export const useStore = create<StoreState>((set) => ({
   orders: [],
   addresses: [],
   populations: [],
+  houses: [],
+  units: [],
+  facilities: [],
   loading: false,
   
   fetchAddresses: async () => {
@@ -80,6 +110,39 @@ export const useStore = create<StoreState>((set) => ({
       set({ populations: response.data, loading: false });
     } catch (error) {
       console.error('Error fetching populations:', error);
+      set({ loading: false });
+    }
+  },
+
+  fetchHouses: async () => {
+    set({ loading: true });
+    try {
+      const response = await axios.get(`${API_URL}/houses`);
+      set({ houses: response.data, loading: false });
+    } catch (error) {
+      console.error('Error fetching houses:', error);
+      set({ loading: false });
+    }
+  },
+
+  fetchUnits: async () => {
+    set({ loading: true });
+    try {
+      const response = await axios.get(`${API_URL}/units`);
+      set({ units: response.data, loading: false });
+    } catch (error) {
+      console.error('Error fetching units:', error);
+      set({ loading: false });
+    }
+  },
+
+  fetchFacilities: async () => {
+    set({ loading: true });
+    try {
+      const response = await axios.get(`${API_URL}/facilities`);
+      set({ facilities: response.data, loading: false });
+    } catch (error) {
+      console.error('Error fetching facilities:', error);
       set({ loading: false });
     }
   },
