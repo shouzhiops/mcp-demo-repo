@@ -95,8 +95,7 @@ model User {
   password  String
   name      String?
   status    String   @default("pending") // pending(待审核), active(正常), rejected(已拒绝)
-  roleId    Int?
-  role      Role?    @relation(fields: [roleId], references: [id])
+  roles     Role[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

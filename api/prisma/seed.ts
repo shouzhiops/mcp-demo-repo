@@ -232,7 +232,9 @@ async function main() {
       password: hashedAdminPassword,
       name: '系统超管',
       status: 'active',
-      roleId: adminRole.id
+      roles: {
+        connect: [{ id: adminRole.id }]
+      }
     }
   });
 

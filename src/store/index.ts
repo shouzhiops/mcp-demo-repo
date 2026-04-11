@@ -33,8 +33,8 @@ export interface User {
   username: string;
   name?: string;
   status?: string;
-  roleId: number;
-  role?: Role;
+  roleIds?: number[];
+  roles?: Role[];
   createdAt?: string;
   updatedAt?: string;
 }

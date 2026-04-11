@@ -23,8 +23,8 @@ export default function ScreenApp() {
     currentUser
   } = useStore();
 
-  const userPermissions = currentUser?.role?.permissions || '';
-  const isSuperAdmin = userPermissions === 'all';
+  const userPermissions = (currentUser?.roles || []).map(r => r.permissions || '').join(',');
+  const isSuperAdmin = userPermissions.includes('all');
   const permissionList = userPermissions.split(',');
   const hasScreenPermission = isSuperAdmin || permissionList.includes('screen') || permissionList.includes('/screen/view');
 

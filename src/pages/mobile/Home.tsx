@@ -67,8 +67,8 @@ export default function Home() {
     }
   ];
 
-  const userPermissions = currentUser?.role?.permissions || '';
-  const isSuperAdmin = userPermissions === 'all';
+  const userPermissions = (currentUser?.roles || []).map(r => r.permissions || '').join(',');
+  const isSuperAdmin = userPermissions.includes('all');
   const permissionList = userPermissions.split(',');
 
   const filterMenu = (item: any) => {

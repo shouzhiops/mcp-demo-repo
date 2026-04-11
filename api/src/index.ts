@@ -43,7 +43,7 @@ app.get('/api/auth/me', async (req: any, res) => {
     }
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
-      include: { role: true }
+      include: { roles: true }
     });
     if (!user) return res.status(404).json({ error: 'User not found' });
     const { password: _, ...userWithoutPassword } = user;
@@ -54,7 +54,7 @@ app.get('/api/auth/me', async (req: any, res) => {
 });
 
 app.post('/api/auth/register', async (req, res) => {
-  const { username, password, name, roleId } = req.body;
+  const { username, password, name, roleIds } = req.body;
   try {
     const existingUser = await prisma.user.findUnique({ where: { username } });
     if (existingUser) {
@@ -66,8 +66,8 @@ app.post('/api/auth/register', async (req, res) => {
         username,
         password: hashedPassword,
         name,
-        roleId,
-        status: 'pending'
+        status: 'pending',
+        roles: roleIds && roleIds.length > 0 ? { connect: roleIds.map((id: number) => ({ id })) } : undefined
       }
     });
     const { password: _, ...userWithoutPassword } = user;
@@ -80,7 +80,7 @@ app.post('/api/auth/register', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
   try {
-    const user = await prisma.user.findUnique({ where: { username }, include: { role: true } });
+    const user = await prisma.user.findUnique({ where: { username }, include: { roles: true } });
     if (!user) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
@@ -92,7 +92,7 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(403).json({ error: `Account status is ${user.status}` });
     }
 
-    const token = jwt.sign({ id: user.id, username: user.username, role: user.role?.name }, JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '24h' });
     const { password: _, ...userWithoutPassword } = user;
     
     res.json({ token, user: userWithoutPassword });
@@ -273,7 +273,7 @@ app.delete('/api/orders/:id', async (req, res) => {
 
 // ==================== User API ====================
 app.get('/api/users', async (req, res) => {
-  const users = await prisma.user.findMany({ include: { role: true } });
+  const users = await prisma.user.findMany({ include: { roles: true } });
   const usersWithoutPassword = users.map((u: any) => {
     const { password, ...rest } = u;
     return rest;
@@ -282,11 +282,18 @@ app.get('/api/users', async (req, res) => {
 });
 
 app.post('/api/users', async (req, res) => {
-  const { username, password, name, status, roleId } = req.body;
+  const { username, password, name, status, roleIds } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { username, password: hashedPassword, name, status, roleId }
+      data: { 
+        username, 
+        password: hashedPassword, 
+        name, 
+        status, 
+        roles: roleIds && roleIds.length > 0 ? { connect: roleIds.map((id: number) => ({ id })) } : undefined 
+      },
+      include: { roles: true }
     });
     const { password: _, ...userWithoutPassword } = user;
     res.json(userWithoutPassword);
@@ -297,14 +304,20 @@ app.post('/api/users', async (req, res) => {
 
 app.put('/api/users/:id', async (req, res) => {
   const { id } = req.params;
-  const { password, ...data } = req.body;
+  const { password, roleIds, ...data } = req.body;
   try {
     if (password) {
       data.password = await bcrypt.hash(password, 10);
     }
+    const updateData: any = { ...data };
+    if (roleIds !== undefined) {
+      updateData.roles = { set: roleIds.map((id: number) => ({ id })) };
+    }
+    
     const user = await prisma.user.update({
       where: { id: Number(id) },
-      data
+      data: updateData,
+      include: { roles: true }
     });
     const { password: _, ...userWithoutPassword } = user;
     res.json(userWithoutPassword);

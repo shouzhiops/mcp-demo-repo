@@ -52,8 +52,8 @@ export default function AdminApp() {
     { key: '/admin/roles', icon: <SafetyCertificateOutlined />, label: '权限管理' },
   ];
 
-  const userPermissions = currentUser?.role?.permissions || '';
-  const isSuperAdmin = userPermissions === 'all';
+  const userPermissions = (currentUser?.roles || []).map(r => r.permissions || '').join(',');
+  const isSuperAdmin = userPermissions.includes('all');
   const permissionList = userPermissions.split(',');
 
   const menuItems = allMenuItems.filter(item => {

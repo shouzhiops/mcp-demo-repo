@@ -19,7 +19,7 @@ export default function Users() {
     setEditingUser(record);
     form.setFieldsValue({
       status: record.status,
-      roleId: record.roleId,
+      roleIds: record.roles?.map(r => r.id) || [],
     });
     setIsModalOpen(true);
   };
@@ -56,10 +56,14 @@ export default function Users() {
     { title: '姓名', dataIndex: 'name', key: 'name', width: 150 },
     { 
       title: '角色', 
-      dataIndex: 'role', 
-      key: 'role', 
+      dataIndex: 'roles', 
+      key: 'roles', 
       width: 150,
-      render: (_: any, record: User) => record.role?.name || '无'
+      render: (_: any, record: User) => (
+        record.roles && record.roles.length > 0 
+          ? record.roles.map(r => <Tag key={r.id} color="blue">{r.name}</Tag>) 
+          : '无'
+      )
     },
     { 
       title: '状态', 
@@ -134,11 +138,11 @@ export default function Users() {
       >
         <Form form={form} layout="vertical">
           <Form.Item
-            name="roleId"
+            name="roleIds"
             label="用户角色"
-            rules={[{ required: true, message: '请选择角色' }]}
+            rules={[{ required: true, message: '请至少选择一个角色' }]}
           >
-            <Select placeholder="请选择角色">
+            <Select mode="multiple" placeholder="请选择角色">
               {roles.map(role => (
                 <Select.Option key={role.id} value={role.id}>{role.name}</Select.Option>
               ))}
