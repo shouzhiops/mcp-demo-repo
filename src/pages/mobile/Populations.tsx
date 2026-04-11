@@ -31,7 +31,7 @@ export default function Populations() {
             value={searchText}
             onChange={v => setSearchText(v)}
             className="bg-gray-100 rounded-xl"
-            style={{ '--border-radius': '12px' }}
+            style={{ '--border-radius': '12px', '--background': '#f3f4f6' }}
           />
         </div>
       </div>
@@ -72,7 +72,7 @@ export default function Populations() {
                   </Tag>
                 </div>
                 
-                <div className="bg-gray-50 rounded-xl p-3 grid grid-cols-1 gap-3 mt-3">
+                <div className="bg-gray-100 rounded-xl p-3 grid grid-cols-1 gap-3 mt-3">
                   <div className="flex items-center text-sm">
                     <Phone size={14} className="text-gray-400 mr-2 shrink-0" />
                     <span className="text-gray-500 mr-2 shrink-0">电话:</span>

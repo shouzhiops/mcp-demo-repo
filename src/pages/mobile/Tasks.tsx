@@ -128,7 +128,7 @@ export default function Tasks() {
     <div className="bg-gray-50 min-h-screen font-sans">
       <NavBar 
         onBack={() => navigate(-1)} 
-        className="bg-white/80 backdrop-blur-md sticky top-0 z-20 border-b border-gray-200/50"
+        className="backdrop-blur-md bg-white/70 sticky top-0 z-20 border-b border-gray-200/50"
       >
         <span className="font-semibold text-lg tracking-wide">待办工单</span>
       </NavBar>

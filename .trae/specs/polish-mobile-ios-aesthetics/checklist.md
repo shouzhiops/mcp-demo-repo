@@ -1,0 +1,9 @@
+- [x] 首页 (Home.tsx) 符合 iOS 质感（毛玻璃、大圆角、统一灰底）。
+- [x] 个人中心 (Mine.tsx) 符合 iOS 质感。
+- [x] 随手拍 (Report.tsx) 符合 iOS 质感。
+- [x] 待办工单 (Tasks.tsx) 符合 iOS 质感。
+- [x] 人员登记 (Register.tsx) 符合 iOS 质感。
+- [x] 标准地址 (Addresses.tsx) 符合 iOS 质感。
+- [x] 实有房屋 (Houses.tsx) 符合 iOS 质感。
+- [x] 实有单位 (Units.tsx) 符合 iOS 质感。
+- [x] 实有设施 (Facilities.tsx) 符合 iOS 质感。

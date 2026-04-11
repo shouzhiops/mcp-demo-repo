@@ -51,7 +51,7 @@ export default function Houses() {
 
       {/* 搜索框 (iOS风格) */}
       <div className="px-4 py-3">
-        <div className="flex items-center bg-white rounded-2xl px-4 py-2.5 shadow-sm transition-all focus-within:ring-2 focus-within:ring-blue-100">
+        <div className="flex items-center bg-gray-100 rounded-2xl px-4 py-2.5 transition-all focus-within:ring-2 focus-within:ring-blue-100">
           <Search className="w-5 h-5 text-gray-400 mr-2 shrink-0" />
           <input 
             type="text" 
@@ -130,11 +130,11 @@ export default function Houses() {
           minHeight: '60vh', 
           borderTopLeftRadius: '24px', 
           borderTopRightRadius: '24px',
-          backgroundColor: '#F2F2F7'
+          backgroundColor: '#f9fafb' // bg-gray-50
         }}
       >
         <div className="flex flex-col h-full">
-          <div className="flex justify-between items-center px-5 py-4 bg-white/70 backdrop-blur-xl border-b border-gray-200/50 rounded-t-[24px]">
+          <div className="flex justify-between items-center px-5 py-4 backdrop-blur-md bg-white/70 border-b border-gray-100 rounded-t-[24px]">
             <span 
               className="text-[16px] text-gray-500 cursor-pointer active:opacity-50" 
               onClick={() => setAddVisible(false)}

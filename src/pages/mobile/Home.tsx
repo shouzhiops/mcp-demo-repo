@@ -67,21 +67,21 @@ export default function Home() {
   ];
 
   return (
-    <div className="bg-gray-100 min-h-full">
+    <div className="bg-gray-50 min-h-screen pb-20">
       <NavBar 
         back={null} 
         left={
-          <div onClick={() => navigate('/mobile/mine')} className="flex items-center justify-center cursor-pointer">
+          <div onClick={() => navigate('/mobile/mine')} className="flex items-center justify-center cursor-pointer text-gray-800">
             <User className="w-6 h-6" />
           </div>
         }
-        className="bg-blue-600 text-white"
+        className="backdrop-blur-md bg-white/70 sticky top-0 z-50 border-b border-gray-200/50"
       >
-        首页
+        <span className="text-gray-900 font-medium">首页</span>
       </NavBar>
       
       <div className="p-4 space-y-4">
-        <Card title="快捷操作" className="shadow-sm border-none rounded-xl">
+        <Card title="快捷操作" className="shadow-sm border-none rounded-2xl">
           <Grid columns={3} gap={16}>
             {menuItems.map((item, index) => (
               <Grid.Item key={index} onClick={() => navigate(item.path)}>
@@ -100,7 +100,7 @@ export default function Home() {
           </Grid>
         </Card>
 
-        <Card title="基础业务" className="shadow-sm border-none rounded-xl">
+        <Card title="基础业务" className="shadow-sm border-none rounded-2xl">
           <Grid columns={3} gap={16}>
             {modules.map((item, index) => (
               <Grid.Item key={index} onClick={() => navigate(item.path)}>

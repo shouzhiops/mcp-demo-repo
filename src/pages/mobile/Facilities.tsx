@@ -61,9 +61,9 @@ export default function Facilities() {
   };
 
   return (
-    <div className="bg-[#F2F2F7] min-h-screen pb-safe">
+    <div className="bg-gray-50 min-h-screen pb-safe">
       {/* 顶部导航 - iOS 毛玻璃效果 */}
-      <div className="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-gray-200/50">
+      <div className="sticky top-0 z-50 backdrop-blur-md bg-white/70 border-b border-gray-100">
         <NavBar 
           onBack={() => navigate(-1)} 
           className="font-medium"
@@ -74,7 +74,7 @@ export default function Facilities() {
       
       {/* 搜索框 (iOS风格) */}
       <div className="px-4 py-3">
-        <div className="flex items-center bg-white rounded-2xl px-4 py-2.5 shadow-sm transition-all focus-within:ring-2 focus-within:ring-teal-100">
+        <div className="flex items-center bg-gray-100 rounded-2xl px-4 py-2.5 transition-all focus-within:ring-2 focus-within:ring-teal-100">
           <Search className="w-5 h-5 text-gray-400 mr-2 shrink-0" />
           <input 
             type="text" 
