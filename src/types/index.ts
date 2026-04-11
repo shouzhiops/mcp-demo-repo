@@ -27,3 +27,13 @@ export interface FacilityData {
   status: '正常' | '需整改' | '需清理';
   issueDesc: string;    // 隐患描述
 }
+
+export interface Incident {
+  id: string;
+  title: string;
+  desc: string;
+  status: '待处理' | '处理中' | '已结案';
+  reporter: string;
+  assignedTo: string;
+  createTime: string;
+}

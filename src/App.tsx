@@ -1,19 +1,25 @@
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Ledger from './pages/Ledger';
-import Inspection from './pages/Inspection';
-import { LayoutDashboard, FileText, ClipboardCheck, Bell } from 'lucide-react';
+import Incidents from './pages/admin/Incidents';
+import MobileLayout from './pages/mobile/MobileLayout';
+import MobileHome from './pages/mobile/Home';
+import MobileReport from './pages/mobile/Report';
+import MobileTasks from './pages/mobile/Tasks';
+import Home from './pages/Home';
+import { LayoutDashboard, FileText, Smartphone, Inbox } from 'lucide-react';
 import { useStore } from './store';
 
 function Navigation() {
   const location = useLocation();
-  const { facilities } = useStore();
-  const issuesCount = facilities.filter(f => f.status !== '正常').length;
+  const { incidents } = useStore();
+  const incidentsCount = incidents.filter(i => i.status === '待处理').length;
 
   const links = [
-    { path: '/', label: '乡村治理大屏', icon: LayoutDashboard },
+    { path: '/screen', label: '乡村治理大屏', icon: LayoutDashboard },
     { path: '/ledger', label: '以房管人台账', icon: FileText },
-    { path: '/inspection', label: '掌上巡查管理', icon: ClipboardCheck },
+    { path: '/admin/incidents', label: '工单分拨中心', icon: Inbox },
+    { path: '/mobile', label: '网格员工作台', icon: Smartphone },
   ];
 
   return (
@@ -45,9 +51,9 @@ function Navigation() {
             >
               <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-400' : 'text-gray-500'}`} />
               <span className="font-medium">{link.label}</span>
-              {link.path === '/inspection' && issuesCount > 0 && (
+              {link.path === '/admin/incidents' && incidentsCount > 0 && (
                 <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">
-                  {issuesCount}
+                  {incidentsCount}
                 </span>
               )}
             </Link>
@@ -72,27 +78,42 @@ function Navigation() {
   );
 }
 
+function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex h-screen bg-gray-900 text-gray-100 font-sans overflow-hidden selection:bg-indigo-500/30">
+      <Navigation />
+      <main className="flex-1 ml-64 overflow-hidden relative">
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-1/4 w-1/2 h-1/2 bg-blue-500/5 rounded-full blur-3xl"></div>
+        </div>
+        <div className="h-full relative z-10">
+          {children}
+        </div>
+      </main>
+    </div>
+  );
+}
+
 function App() {
   return (
     <Router>
-      <div className="flex h-screen bg-gray-900 text-gray-100 font-sans overflow-hidden selection:bg-indigo-500/30">
-        <Navigation />
-        <main className="flex-1 ml-64 overflow-hidden relative">
-          {/* Decorative background elements */}
-          <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-            <div className="absolute -top-40 -right-40 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-0 left-1/4 w-1/2 h-1/2 bg-blue-500/5 rounded-full blur-3xl"></div>
-          </div>
-          
-          <div className="h-full relative z-10">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/ledger" element={<Ledger />} />
-              <Route path="/inspection" element={<Inspection />} />
-            </Routes>
-          </div>
-        </main>
-      </div>
+      <Routes>
+        {/* 角色入口选择页 */}
+        <Route path="/" element={<Home />} />
+        
+        {/* PC 端路由 */}
+        <Route path="/screen" element={<AdminLayout><Dashboard /></AdminLayout>} />
+        <Route path="/ledger" element={<AdminLayout><Ledger /></AdminLayout>} />
+        <Route path="/admin/incidents" element={<AdminLayout><Incidents /></AdminLayout>} />
+        
+        {/* 移动端路由 */}
+        <Route path="/mobile" element={<MobileLayout />}>
+          <Route index element={<MobileHome />} />
+          <Route path="report" element={<MobileReport />} />
+          <Route path="tasks" element={<MobileTasks />} />
+        </Route>
+      </Routes>
     </Router>
   );
 }

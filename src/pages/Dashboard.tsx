@@ -3,7 +3,7 @@ import ReactECharts from 'echarts-for-react';
 import { AlertTriangle, Users, Home, Activity } from 'lucide-react';
 
 export default function Dashboard() {
-  const { houses, population, facilities } = useStore();
+  const { houses, population, facilities, incidents } = useStore();
 
   const totalPopulation = population.length;
   const totalHouses = houses.length;
@@ -13,6 +13,7 @@ export default function Dashboard() {
   );
   
   const warningFacilities = facilities.filter(f => f.status !== '正常');
+  const pendingIncidents = incidents.filter(i => i.status === '待处理');
 
   const migrantWorkersByGroup = population
     .filter(p => p.label === '外出务工')
@@ -107,8 +108,8 @@ export default function Dashboard() {
         </div>
         <div className="bg-gray-800 border border-gray-700 p-6 rounded-xl shadow-lg flex items-center justify-between">
           <div>
-            <p className="text-gray-400 text-sm font-medium mb-1">需整改隐患</p>
-            <p className="text-4xl font-bold text-red-400 font-mono">{warningFacilities.length}</p>
+            <p className="text-gray-400 text-sm font-medium mb-1">待处理工单</p>
+            <p className="text-4xl font-bold text-red-400 font-mono">{pendingIncidents.length}</p>
           </div>
           <div className="p-3 bg-red-500/20 rounded-lg">
             <AlertTriangle className="text-red-400 w-8 h-8" />
@@ -138,24 +139,25 @@ export default function Dashboard() {
         <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-lg p-6 flex flex-col overflow-hidden">
           <h3 className="text-lg font-medium text-white mb-4 flex items-center">
             <span className="w-1 h-4 bg-red-500 rounded-full mr-2"></span>
-            实时预警
+            实时工单预警
           </h3>
           <div className="flex-1 overflow-y-auto pr-2 space-y-3">
-            {warningFacilities.map(f => (
-              <div key={f.id} className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 flex items-start space-x-3">
+            {pendingIncidents.map(incident => (
+              <div key={incident.id} className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 flex items-start space-x-3">
                 <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-red-200 font-medium">{f.name} <span className="text-xs bg-red-500/20 text-red-300 px-2 py-0.5 rounded ml-2">{f.status}</span></p>
-                  <p className="text-gray-400 text-sm mt-1">{f.issueDesc}</p>
+                  <p className="text-red-200 font-medium">{incident.title} <span className="text-xs bg-red-500/20 text-red-300 px-2 py-0.5 rounded ml-2">{incident.status}</span></p>
+                  <p className="text-gray-400 text-sm mt-1">{incident.desc}</p>
+                  <p className="text-gray-500 text-xs mt-2">上报人: {incident.reporter}</p>
                 </div>
               </div>
             ))}
-            {careList.map(p => (
-              <div key={p.idCard} className="bg-orange-900/20 border border-orange-500/30 rounded-lg p-4 flex items-start space-x-3">
+            {warningFacilities.map(f => (
+              <div key={f.id} className="bg-orange-900/20 border border-orange-500/30 rounded-lg p-4 flex items-start space-x-3">
                 <Activity className="w-5 h-5 text-orange-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-orange-200 font-medium">{p.name} <span className="text-xs bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded ml-2">{p.label}</span></p>
-                  <p className="text-gray-400 text-sm mt-1">需安排本周网格员上门走访</p>
+                  <p className="text-orange-200 font-medium">{f.name} <span className="text-xs bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded ml-2">{f.status}</span></p>
+                  <p className="text-gray-400 text-sm mt-1">{f.issueDesc}</p>
                 </div>
               </div>
             ))}
