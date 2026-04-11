@@ -8,17 +8,21 @@ export default function Population() {
   const [searchText, setSearchText] = useState('');
 
   const columns = [
-    { title: '姓名', dataIndex: 'name', key: 'name' },
+    { title: '姓名', dataIndex: 'name', key: 'name', width: 120 },
+    { title: '性别', dataIndex: 'gender', key: 'gender', width: 80 },
+    { title: '身份证号', dataIndex: 'idCard', key: 'idCard', width: 180 },
     { 
       title: '联系电话', 
       dataIndex: 'phone', 
       key: 'phone',
+      width: 150,
       render: (text: string) => text || <span className="text-gray-400">暂无</span>
     },
     {
       title: '人口类型',
       dataIndex: 'type',
       key: 'type',
+      width: 120,
       render: (type: string) => {
         let color = 'blue';
         if (type.includes('老人') || type.includes('儿童')) color = 'volcano';
@@ -27,10 +31,12 @@ export default function Population() {
         return <Tag color={color}>{type}</Tag>;
       },
     },
-    { title: '居住地址编码', dataIndex: 'addressId', key: 'addressId' },
+    { title: '居住地址编码', dataIndex: 'addressId', key: 'addressId', width: 250 },
     {
       title: '操作',
       key: 'action',
+      fixed: 'right' as const,
+      width: 120,
       render: () => (
         <Space size="middle">
           <a className="text-blue-600">编辑</a>
@@ -41,7 +47,7 @@ export default function Population() {
   ];
 
   const filteredData = populations.filter(item => 
-    item.name.includes(searchText) || item.addressId.includes(searchText)
+    item.name.includes(searchText) || item.addressId.includes(searchText) || (item.idCard && item.idCard.includes(searchText))
   );
 
   return (
@@ -56,7 +62,7 @@ export default function Population() {
       extra={
         <Space>
           <Input
-            placeholder="搜索姓名/地址编码"
+            placeholder="搜索姓名/身份证/地址"
             prefix={<SearchOutlined />}
             onChange={e => setSearchText(e.target.value)}
             style={{ width: 250 }}
@@ -70,6 +76,7 @@ export default function Population() {
         columns={columns} 
         dataSource={filteredData} 
         rowKey="id"
+        scroll={{ x: 'max-content' }}
         pagination={{ pageSize: 10 }}
       />
     </Card>

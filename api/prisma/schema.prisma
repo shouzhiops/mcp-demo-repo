@@ -4,14 +4,17 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
+  url      = "file:./dev.db"
 }
 
 model Address {
-  id          String       @id
+  id          String   @id // e.g., '莲麻村-中田组-001号'
   name        String
   longitude   Float
   latitude    Float
+  level       String?  @default("村/网格")
+  type        String?  @default("住宅")
+
   populations Population[]
   houses      House[]
   units       Unit[]
@@ -20,33 +23,48 @@ model Address {
 }
 
 model Population {
-  id        Int     @id @default(autoincrement())
-  name      String
-  type      String?
-  phone     String?
-  addressId String
-  address   Address @relation(fields: [addressId], references: [id])
+  id          Int      @id @default(autoincrement())
+  name        String
+  type        String?  // e.g., '老人', '儿童', '外出', '干部', '军人'
+  phone       String?
+  idCard      String?  // 新增：身份证号
+  gender      String?  // 新增：性别
+  
+  addressId   String
+  address     Address  @relation(fields: [addressId], references: [id])
 }
 
 model House {
-  id        Int     @id @default(autoincrement())
-  status    String
-  addressId String
-  address   Address @relation(fields: [addressId], references: [id])
+  id          Int      @id @default(autoincrement())
+  status      String   // e.g., '危房', '民宿', '自建房'
+  usage       String?  @default("自住") // 新增：房屋用途
+  ownerName   String?  // 新增：产权人
+  ownerPhone  String?  // 新增：产权人电话
+
+  addressId   String
+  address     Address  @relation(fields: [addressId], references: [id])
 }
 
 model Unit {
-  id        Int     @id @default(autoincrement())
-  name      String
-  addressId String
-  address   Address @relation(fields: [addressId], references: [id])
+  id           Int      @id @default(autoincrement())
+  name         String
+  type         String?  // 新增：单位类型(如：特色餐饮、加工制造)
+  legalPerson  String?  // 新增：法人/负责人
+  contactPhone String?  // 新增：联系电话
+
+  addressId    String
+  address      Address  @relation(fields: [addressId], references: [id])
 }
 
 model Facility {
-  id        Int     @id @default(autoincrement())
-  type      String
-  addressId String
-  address   Address @relation(fields: [addressId], references: [id])
+  id          Int      @id @default(autoincrement())
+  type        String   // e.g., '消防', '监控', '垃圾'
+  name        String?  // 新增：设施具体名称
+  status      String?  @default("正常") // 新增：运行状态
+  manager     String?  // 新增：管护责任人
+
+  addressId   String
+  address     Address  @relation(fields: [addressId], references: [id])
 }
 
 model Order {
@@ -54,7 +72,10 @@ model Order {
   type        String
   status      String
   description String?
+  source      String?  @default("网格员巡查") // 新增：隐患来源
+  priority    String?  @default("中")        // 新增：优先级(高/中/低)
   handlerId   Int?
+  
   addressId   String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -62,6 +83,6 @@ model Order {
 }
 
 model Config {
-  id          Int      @id @default(autoincrement())
+  id          Int      @id @default(1)
   tiandituKey String?
 }

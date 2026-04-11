@@ -104,10 +104,17 @@ async function main() {
           if (isHead) hasHead = true;
           
           let popType = isHead ? '常住村民' : getByWeight(POPULATION_TYPES).type;
+          const gender = Math.random() > 0.5 ? '男' : '女';
+          const age = randomInt(5, 80);
+          const birthYear = new Date().getFullYear() - age;
+          // 随机生成假的身份证号
+          const idCard = `440184${birthYear}${String(randomInt(1, 12)).padStart(2, '0')}${String(randomInt(1, 28)).padStart(2, '0')}${randomInt(1000, 9999)}`;
           
           populations.push({
             name: `${group.surname}${randomElement(FIRST_NAMES)}`,
             type: popType,
+            gender: gender,
+            idCard: idCard,
             phone: `13${randomInt(100000000, 999999999)}`,
             addressId
           });
@@ -115,16 +122,47 @@ async function main() {
 
         // --- 单位 (部分民宿和农家乐生成实体) ---
         if (houseStatus === '特色民宿(经营)') {
-          units.push({ name: `莲麻${group.surname}家特色民宿`, addressId });
+          units.push({ 
+            name: `莲麻${group.surname}家特色民宿`, 
+            type: '特色餐饮住宿',
+            legalPerson: `${group.surname}${randomElement(FIRST_NAMES)}`,
+            contactPhone: `13${randomInt(100000000, 999999999)}`,
+            addressId 
+          });
         } else if (houseStatus === '农家乐用房') {
-          units.push({ name: `莲麻原生态农家乐(${group.name})`, addressId });
+          units.push({ 
+            name: `莲麻原生态农家乐(${group.name})`, 
+            type: '特色餐饮住宿',
+            legalPerson: `${group.surname}${randomElement(FIRST_NAMES)}`,
+            contactPhone: `13${randomInt(100000000, 999999999)}`,
+            addressId 
+          });
         } else if (Math.random() > 0.98) {
-          units.push({ name: `${group.surname}记头酒酿造坊`, addressId });
+          units.push({ 
+            name: `${group.surname}记头酒酿造坊`, 
+            type: '加工制造',
+            legalPerson: `${group.surname}${randomElement(FIRST_NAMES)}`,
+            contactPhone: `13${randomInt(100000000, 999999999)}`,
+            addressId 
+          });
         }
       } else {
         // 公共区域生成设施
-        const facilityTypes = ['雪亮工程监控球机', '微型消防站', '垃圾分类收集亭', '防溺水警示牌', '村级水泵房'];
-        facilities.push({ type: randomElement(facilityTypes), addressId });
+        const facilityTypes = [
+          { type: '雪亮工程监控球机', name: `${group.name}主路口监控` }, 
+          { type: '微型消防站', name: `${group.name}微型消防柜` }, 
+          { type: '垃圾分类收集亭', name: `${group.name}垃圾投放点` }, 
+          { type: '防溺水警示牌', name: `${group.name}溪边警示牌` }, 
+          { type: '村级水泵房', name: `${group.name}供水泵房` }
+        ];
+        const f = randomElement(facilityTypes);
+        facilities.push({ 
+          type: f.type, 
+          name: f.name,
+          status: Math.random() > 0.95 ? '维护中' : '正常',
+          manager: `${group.surname}网格员`,
+          addressId 
+        });
       }
 
       // --- 隐患工单 ---
@@ -132,6 +170,8 @@ async function main() {
       if (Math.random() > 0.9) {
         const orderTypes = ['环境卫生', '矛盾纠纷', '消防隐患', '危房排查', '治安维稳', '设施损坏'];
         const statuses = ['待分拨', '待处置', '已处置', '已销账'];
+        const priorities = ['高', '中', '低'];
+        const sources = ['群众上报', '网格员巡查', '物联网告警'];
         
         // 随机生成过去 30 天内的时间
         const daysAgo = randomInt(0, 30);
@@ -143,6 +183,8 @@ async function main() {
         orders.push({
           type: randomElement(orderTypes),
           status: status,
+          priority: randomElement(priorities),
+          source: randomElement(sources),
           addressId,
           description: `网格员巡查发现位于${addressId}的隐患情况，需及时跟进处理。`,
           createdAt: createdAt,
@@ -154,11 +196,11 @@ async function main() {
 
   // 额外添加几个固定的重要村级单位
   const centerAddressId = '莲麻村-村委大院-001号';
-  addresses.push({ id: centerAddressId, name: '莲麻村党群服务中心', longitude: CENTER_LNG, latitude: CENTER_LAT });
-  units.push({ name: '莲麻村村民委员会', addressId: centerAddressId });
-  units.push({ name: '莲麻小镇游客服务中心', addressId: centerAddressId });
-  facilities.push({ type: '微型消防站(总站)', addressId: centerAddressId });
-  populations.push({ name: '王书记', type: '村干部', phone: '13800000000', addressId: centerAddressId });
+  addresses.push({ id: centerAddressId, name: '莲麻村党群服务中心', longitude: CENTER_LNG, latitude: CENTER_LAT, level: '村/网格', type: '公共区域' });
+  units.push({ name: '莲麻村村民委员会', type: '机关单位', legalPerson: '王书记', contactPhone: '020-88888888', addressId: centerAddressId });
+  units.push({ name: '莲麻小镇游客服务中心', type: '便民服务', legalPerson: '李站长', contactPhone: '020-66666666', addressId: centerAddressId });
+  facilities.push({ type: '微型消防站(总站)', name: '村委大院微型消防站', status: '正常', manager: '王书记', addressId: centerAddressId });
+  populations.push({ name: '王书记', type: '村干部', gender: '男', idCard: '440184197001011234', phone: '13800000000', addressId: centerAddressId });
 
   console.log(`Prepared ${addresses.length} addresses.`);
   console.log(`Prepared ${populations.length} populations.`);

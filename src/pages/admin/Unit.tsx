@@ -1,62 +1,86 @@
-import React, { useEffect } from 'react';
-import { Table, Card, Button, message, Tag } from 'antd';
-import { DownloadOutlined, ShopOutlined } from '@ant-design/icons';
+import React, { useEffect, useState } from 'react';
+import { Table, Card, Button, message, Tag, Space, Input } from 'antd';
+import { DownloadOutlined, ShopOutlined, SearchOutlined, PlusOutlined } from '@ant-design/icons';
 import { useStore } from '../../store';
 
 export default function Unit() {
   const { units, loading, fetchUnits } = useStore();
+  const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
     fetchUnits();
   }, []);
 
   const columns = [
-    {
-      title: '单位名称',
-      dataIndex: 'name',
-      key: 'name',
-      width: '30%',
-    },
-    {
-      title: '单位类型',
+    { title: '单位编号', dataIndex: 'id', key: 'id', width: 100 },
+    { title: '单位名称', dataIndex: 'name', key: 'name', width: 250 },
+    { 
+      title: '单位类型', 
+      dataIndex: 'type', 
       key: 'type',
-      render: (_: any, record: any) => {
+      width: 150,
+      render: (type: string) => {
         let color = 'cyan';
-        if (record.name.includes('农家乐')) color = 'orange';
-        if (record.name.includes('酒业')) color = 'purple';
-        if (record.name.includes('卫生')) color = 'red';
-        return <Tag color={color}>实体经济</Tag>;
+        if (type?.includes('餐饮') || type?.includes('住宿')) color = 'orange';
+        if (type?.includes('机关') || type?.includes('服务')) color = 'blue';
+        if (type?.includes('制造') || type?.includes('加工')) color = 'purple';
+        return <Tag color={color}>{type || '未分类'}</Tag>;
       },
-      width: '20%',
     },
+    { title: '法定代表人', dataIndex: 'legalPerson', key: 'legalPerson', width: 120 },
+    { title: '联系电话', dataIndex: 'contactPhone', key: 'contactPhone', width: 150 },
+    { title: '标准地址', dataIndex: 'addressId', key: 'addressId', width: 250 },
     {
-      title: '标准地址',
-      dataIndex: 'addressId',
-      key: 'addressId',
-      width: '30%',
+      title: '操作',
+      key: 'action',
+      fixed: 'right' as const,
+      width: 120,
+      render: () => (
+        <Space size="middle">
+          <a className="text-blue-600">编辑</a>
+          <a className="text-red-600">删除</a>
+        </Space>
+      ),
     },
-    {
-      title: '位置描述',
-      key: 'location',
-      render: (_: any, record: any) => record.address?.name || '-',
-      width: '20%',
-    }
   ];
 
   const handleExport = () => {
     message.success('实有单位台账导出成功！(模拟)');
   };
 
+  const filteredData = units.filter(item => 
+    (item.name && item.name.includes(searchText)) || 
+    (item.addressId && item.addressId.includes(searchText)) || 
+    (item.legalPerson && item.legalPerson.includes(searchText))
+  );
+
   return (
     <Card 
-      title={<span className="text-lg font-bold"><ShopOutlined className="mr-2" />实有单位台账</span>}
-      extra={<Button type="primary" icon={<DownloadOutlined />} onClick={handleExport}>一键导出</Button>}
       className="shadow-sm"
+      title={
+        <span className="text-lg font-bold">
+          <ShopOutlined className="mr-2" />
+          实有单位台账
+        </span>
+      }
+      extra={
+        <Space>
+          <Input
+            placeholder="搜索名称/地址/法人"
+            prefix={<SearchOutlined />}
+            onChange={e => setSearchText(e.target.value)}
+            style={{ width: 250 }}
+          />
+          <Button type="primary" icon={<PlusOutlined />}>新增单位</Button>
+          <Button icon={<DownloadOutlined />} onClick={handleExport}>导出</Button>
+        </Space>
+      }
     >
       <Table 
         columns={columns} 
-        dataSource={units} 
-        rowKey="id" 
+        dataSource={filteredData} 
+        rowKey="id"
+        scroll={{ x: 'max-content' }}
         loading={loading}
         pagination={{ pageSize: 10 }}
       />

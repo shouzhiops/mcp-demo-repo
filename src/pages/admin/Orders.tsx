@@ -44,19 +44,31 @@ export default function Orders() {
       title: '隐患类型',
       dataIndex: 'type',
       key: 'type',
-      width: 150,
+      width: 120,
     },
-    {
-      title: '隐患描述',
-      dataIndex: 'description',
-      key: 'description',
-      ellipsis: true,
+    { 
+      title: '隐患来源', 
+      dataIndex: 'source', 
+      key: 'source',
+      width: 120,
+      render: (source: string) => {
+        let color = 'blue';
+        if (source === '群众上报') color = 'green';
+        if (source === '物联网告警') color = 'red';
+        return <Tag color={color}>{source || '网格员巡查'}</Tag>;
+      },
     },
-    {
-      title: '地址信息',
-      dataIndex: 'addressId',
-      key: 'addressId',
-      width: 200,
+    { 
+      title: '优先级', 
+      dataIndex: 'priority', 
+      key: 'priority',
+      width: 100,
+      render: (priority: string) => {
+        let color = 'orange';
+        if (priority === '高') color = 'red';
+        if (priority === '低') color = 'green';
+        return <Tag color={color}>{priority || '中'}</Tag>;
+      },
     },
     {
       title: '当前状态',
@@ -73,7 +85,20 @@ export default function Orders() {
       },
     },
     {
-      title: '创建时间',
+      title: '详情描述',
+      dataIndex: 'description',
+      key: 'description',
+      width: 250,
+      ellipsis: true,
+    },
+    {
+      title: '关联地址',
+      dataIndex: 'addressId',
+      key: 'addressId',
+      width: 200,
+    },
+    {
+      title: '上报时间',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 180,
@@ -82,6 +107,7 @@ export default function Orders() {
     {
       title: '操作',
       key: 'action',
+      fixed: 'right' as const,
       width: 150,
       render: (_: any, record: Order) => {
         if (record.status === '待分拨') {
@@ -113,7 +139,7 @@ export default function Orders() {
   ];
 
   const filteredData = orders.filter(item => 
-    item.type.includes(searchText) || item.addressId.includes(searchText) || item.description.includes(searchText)
+    item.type.includes(searchText) || item.addressId.includes(searchText) || item.description.includes(searchText) || ((item as any).source && (item as any).source.includes(searchText))
   );
 
   return (
@@ -128,7 +154,7 @@ export default function Orders() {
       extra={
         <Space>
           <Input
-            placeholder="搜索类型/描述/地址"
+            placeholder="搜索类型/描述/地址/来源"
             prefix={<SearchOutlined />}
             onChange={e => setSearchText(e.target.value)}
             style={{ width: 250 }}
@@ -139,7 +165,9 @@ export default function Orders() {
     >
       <Table 
         columns={columns} 
-        dataSource={filteredData.map(order => ({ ...order, key: order.id }))} 
+        dataSource={filteredData} 
+        rowKey="id"
+        scroll={{ x: 'max-content' }}
         pagination={{ pageSize: 10 }}
       />
     </Card>

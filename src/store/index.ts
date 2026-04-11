@@ -8,6 +8,8 @@ export interface Order {
   type: string;
   status: '待分拨' | '待处置' | '已处置' | '已销账';
   addressId: string;
+  source?: string;
+  priority?: string;
   handlerId?: number;
   description?: string;
   images?: string[];
@@ -21,6 +23,8 @@ export interface Address {
   name: string;
   longitude: number;
   latitude: number;
+  level?: string;
+  type?: string;
   orders?: Order[];
   populations?: Population[];
   houses?: House[];
@@ -30,7 +34,9 @@ export interface Population {
   id: number;
   name: string;
   type: string;
-  phone: string;
+  phone?: string;
+  idCard?: string;
+  gender?: string;
   addressId: string;
   address?: Address;
 }
@@ -38,6 +44,9 @@ export interface Population {
 export interface House {
   id: number;
   status: string;
+  usage?: string;
+  ownerName?: string;
+  ownerPhone?: string;
   addressId: string;
   address?: Address;
 }
@@ -45,6 +54,9 @@ export interface House {
 export interface Unit {
   id: number;
   name: string;
+  type?: string;
+  legalPerson?: string;
+  contactPhone?: string;
   addressId: string;
   address?: Address;
 }
@@ -52,6 +64,9 @@ export interface Unit {
 export interface Facility {
   id: number;
   type: string;
+  name?: string;
+  status?: string;
+  manager?: string;
   addressId: string;
   address?: Address;
 }
