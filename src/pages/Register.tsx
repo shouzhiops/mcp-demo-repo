@@ -11,8 +11,8 @@ const Register: React.FC = () => {
   const onFinish = async (values: any) => {
     try {
       await register(values);
-      message.success('注册成功');
-      navigate('/admin');
+      message.success('注册成功，请等待管理员审核后登录');
+      navigate('/login');
     } catch (error: any) {
       message.error(error.response?.data?.error || '注册失败');
     }

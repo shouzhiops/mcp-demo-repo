@@ -13,7 +13,10 @@ app.use(express.json());
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 const authenticateToken = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  if (req.originalUrl.startsWith('/api/auth') || req.originalUrl.startsWith('/api/config')) {
+  if (
+    (req.originalUrl.startsWith('/api/auth') && req.originalUrl !== '/api/auth/me') || 
+    req.originalUrl.startsWith('/api/config')
+  ) {
     return next();
   }
 
@@ -32,6 +35,24 @@ const authenticateToken = (req: express.Request, res: express.Response, next: ex
 app.use('/api', authenticateToken);
 
 // ==================== Auth API ====================
+app.get('/api/auth/me', async (req: any, res) => {
+  try {
+    // req.user is set by authenticateToken middleware
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      include: { role: true }
+    });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const { password: _, ...userWithoutPassword } = user;
+    res.json(userWithoutPassword);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/auth/register', async (req, res) => {
   const { username, password, name, roleId } = req.body;
   try {

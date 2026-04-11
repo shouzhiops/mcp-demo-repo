@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import MobileApp from './pages/mobile/MobileApp';
 import AdminApp from './pages/admin/AdminApp';
@@ -12,6 +13,17 @@ const PrivateRoute = ({ children }: { children: JSX.Element }) => {
 };
 
 function App() {
+  const { token, fetchCurrentUser } = useStore();
+
+  useEffect(() => {
+    if (token) {
+      fetchCurrentUser().catch(() => {
+        // If fetch fails (e.g. token expired or invalid), we clear the session
+        useStore.getState().logout();
+      });
+    }
+  }, [token, fetchCurrentUser]);
+
   return (
     <Router>
       <Routes>

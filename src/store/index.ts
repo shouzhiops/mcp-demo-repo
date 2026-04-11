@@ -122,6 +122,7 @@ interface StoreState {
   login: (credentials: any) => Promise<void>;
   register: (credentials: any) => Promise<void>;
   logout: () => void;
+  fetchCurrentUser: () => Promise<void>;
   fetchUsers: () => Promise<void>;
   fetchRoles: () => Promise<void>;
   orders: Order[];
@@ -176,30 +177,51 @@ interface StoreState {
   deleteRole: (id: number) => Promise<void>;
 }
 
+let initialCurrentUser = null;
+try {
+  const storedUser = localStorage.getItem('currentUser');
+  if (storedUser) {
+    initialCurrentUser = JSON.parse(storedUser);
+  }
+} catch (e) {
+  console.error('Failed to parse currentUser from localStorage');
+}
+
 export const useStore = create<StoreState>((set, get) => ({
 
   token: localStorage.getItem('token') || null,
-  currentUser: null,
+  currentUser: initialCurrentUser,
   users: [],
   roles: [],
-  
+
   login: async (credentials) => {
     const res = await axios.post(`${API_URL}/auth/login`, credentials);
     const { token, user } = res.data;
     localStorage.setItem('token', token);
+    localStorage.setItem('currentUser', JSON.stringify(user));
     set({ token, currentUser: user });
   },
 
   register: async (credentials) => {
-    const res = await axios.post(`${API_URL}/auth/register`, credentials);
-    const { token, user } = res.data;
-    localStorage.setItem('token', token);
-    set({ token, currentUser: user });
+    // 注册成功后状态为 pending，不可立即登录
+    await axios.post(`${API_URL}/auth/register`, credentials);
   },
 
   logout: () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('currentUser');
     set({ token: null, currentUser: null });
+  },
+
+  fetchCurrentUser: async () => {
+    try {
+      const res = await axios.get(`${API_URL}/auth/me`);
+      localStorage.setItem('currentUser', JSON.stringify(res.data));
+      set({ currentUser: res.data });
+    } catch (error) {
+      console.error('Failed to fetch current user', error);
+      throw error;
+    }
   },
 
   fetchUsers: async () => {
