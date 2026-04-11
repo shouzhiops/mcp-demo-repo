@@ -69,10 +69,10 @@ export default function ScreenApp() {
   }
 
   return (
-    <div className="w-screen h-screen bg-[#020617] overflow-hidden flex items-center justify-center">
+    <div className="w-screen h-screen bg-[#020617] overflow-hidden flex items-center justify-center relative">
       {/* 大屏内容主容器 */}
       <div 
-        className="relative origin-center"
+        className="relative origin-center shrink-0"
         style={{
           width: '1920px',
           height: '1080px',
