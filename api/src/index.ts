@@ -13,7 +13,7 @@ app.use(express.json());
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 const authenticateToken = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  if (req.path.startsWith('/api/auth') || req.path.startsWith('/api/config')) {
+  if (req.originalUrl.startsWith('/api/auth') || req.originalUrl.startsWith('/api/config')) {
     return next();
   }
 
