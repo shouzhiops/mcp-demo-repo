@@ -1,0 +1,6 @@
+- [x] 数据库已新增 `Config` 表，包含 `tiandituKey` 字段，且 `seed.ts` 已注入默认空配置。
+- [x] 后端 `/api/config` GET 和 PATCH 接口能够正常读取和更新配置。
+- [x] 前端 `Zustand` 状态管理已添加 `config` 状态，应用启动时会调用对应的 `fetchConfig`。
+- [x] PC 管理后台侧边栏已添加“系统设置”菜单，页面能正常保存天地图 API Key。
+- [x] 大屏在未配置 API Key 时，会展示友好的遮罩提示，不加载失效地图。
+- [x] 大屏在配置 API Key 后，能够正确加载并显示“天地图”影像底图和中文注记层。

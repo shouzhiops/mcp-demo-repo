@@ -12,6 +12,12 @@ async function main() {
   await prisma.unit.deleteMany()
   await prisma.facility.deleteMany()
   await prisma.address.deleteMany()
+  await prisma.config.deleteMany()
+
+  // Config
+  await prisma.config.create({
+    data: { id: 1, tiandituKey: '' }
+  })
 
   // Addresses in Guangzhou Conghua Lianma Village (approx 23.85, 113.89)
   const a1 = await prisma.address.create({

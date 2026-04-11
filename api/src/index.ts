@@ -147,6 +147,35 @@ app.patch('/api/orders/:id', async (req, res) => {
   }
 });
 
+// 获取系统配置
+app.get('/api/config', async (req, res) => {
+  try {
+    let config = await prisma.config.findUnique({ where: { id: 1 } });
+    if (!config) {
+      config = await prisma.config.create({ data: { id: 1, tiandituKey: '' } });
+    }
+    res.json(config);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch config' });
+  }
+});
+
+// 更新系统配置
+app.patch('/api/config', async (req, res) => {
+  try {
+    const { tiandituKey } = req.body;
+    const updatedConfig = await prisma.config.update({
+      where: { id: 1 },
+      data: { tiandituKey }
+    });
+    res.json(updatedConfig);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to update config' });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {

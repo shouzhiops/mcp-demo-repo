@@ -1,9 +1,17 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import ReactECharts from 'echarts-for-react';
 import { useStore } from '../../store';
+
+// Fix for default marker icons in react-leaflet
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 const createIcon = (hasAlert: boolean) => {
   return L.divIcon({
@@ -19,9 +27,11 @@ const createIcon = (hasAlert: boolean) => {
 };
 
 const ScreenApp: React.FC = () => {
-  const { addresses, orders, fetchAddresses, fetchOrders } = useStore();
+  const { addresses, orders, config, fetchAddresses, fetchOrders, fetchConfig } = useStore();
+  const [mapKey, setMapKey] = useState(0);
 
   useEffect(() => {
+    fetchConfig();
     fetchAddresses();
     fetchOrders();
     const interval = setInterval(() => {
@@ -29,6 +39,13 @@ const ScreenApp: React.FC = () => {
     }, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  // Force map to re-render when config changes
+  useEffect(() => {
+    if (config?.tiandituKey) {
+      setMapKey(prev => prev + 1);
+    }
+  }, [config?.tiandituKey]);
 
   const activeOrders = useMemo(() => {
     return orders.filter(o => o.status !== '已销账');
@@ -124,47 +141,67 @@ const ScreenApp: React.FC = () => {
     <div className="w-screen h-screen relative bg-slate-950 overflow-hidden text-slate-200">
       {/* Map Background */}
       <div className="absolute inset-0 z-0">
-        <MapContainer 
-          center={[23.85, 113.89]} 
-          zoom={16} 
-          style={{ height: '100%', width: '100%', background: '#020617' }}
-          zoomControl={false}
-        >
-          {/* Dark theme tiles */}
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          />
-          
-          {addresses.map(addr => {
-            const hasAlert = activeAddressIds.has(addr.id);
-            return (
-              <Marker 
-                key={addr.id} 
-                position={[addr.latitude, addr.longitude]}
-                icon={createIcon(hasAlert)}
-              >
-                <Popup className="custom-popup">
-                  <div className="text-slate-800 p-1 min-w-[150px]">
-                    <h3 className="font-bold text-base border-b border-slate-200 pb-2 mb-2">{addr.name}</h3>
-                    <p className="text-sm text-slate-600 mb-1"><span className="font-semibold">编号:</span> {addr.id}</p>
-                    {hasAlert ? (
-                      <div className="mt-3 flex items-center gap-1 text-red-600 font-semibold text-sm bg-red-50 p-2 rounded border border-red-200">
-                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                        有未处理异常工单
-                      </div>
-                    ) : (
-                      <div className="mt-3 flex items-center gap-1 text-green-600 font-semibold text-sm bg-green-50 p-2 rounded border border-green-200">
-                        <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                        状态正常
-                      </div>
-                    )}
-                  </div>
-                </Popup>
-              </Marker>
-            );
-          })}
-        </MapContainer>
+        {!config?.tiandituKey ? (
+          <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900 bg-opacity-90">
+            <div className="bg-gray-800 p-8 rounded-lg border border-gray-700 shadow-2xl text-center max-w-md">
+              <svg className="w-16 h-16 text-yellow-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <h2 className="text-xl font-bold text-white mb-2">未配置天地图 API Key</h2>
+              <p className="text-gray-400">
+                请前往管理后台的「系统全局设置」页面，配置您的天地图 API Key 后即可加载高清卫星影像底图。
+              </p>
+            </div>
+          </div>
+        ) : (
+          <MapContainer 
+            key={`map-${mapKey}`}
+            center={[23.85, 113.89]} 
+            zoom={16} 
+            style={{ height: '100%', width: '100%', background: '#020617' }}
+            zoomControl={false}
+          >
+            {/* 天地图影像底图 */}
+            <TileLayer
+              url={`http://t0.tianditu.gov.cn/img_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=img&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${config.tiandituKey}`}
+              maxZoom={18}
+            />
+            {/* 天地图影像注记 */}
+            <TileLayer
+              url={`http://t0.tianditu.gov.cn/cia_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=cia&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${config.tiandituKey}`}
+              maxZoom={18}
+            />
+            
+            {addresses.map(addr => {
+              const hasAlert = activeAddressIds.has(addr.id);
+              return (
+                <Marker 
+                  key={addr.id} 
+                  position={[addr.latitude, addr.longitude]}
+                  icon={createIcon(hasAlert)}
+                >
+                  <Popup className="custom-popup">
+                    <div className="text-slate-800 p-1 min-w-[150px]">
+                      <h3 className="font-bold text-base border-b border-slate-200 pb-2 mb-2">{addr.name}</h3>
+                      <p className="text-sm text-slate-600 mb-1"><span className="font-semibold">编号:</span> {addr.id}</p>
+                      {hasAlert ? (
+                        <div className="mt-3 flex items-center gap-1 text-red-600 font-semibold text-sm bg-red-50 p-2 rounded border border-red-200">
+                          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                          有未处理异常工单
+                        </div>
+                      ) : (
+                        <div className="mt-3 flex items-center gap-1 text-green-600 font-semibold text-sm bg-green-50 p-2 rounded border border-green-200">
+                          <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                          状态正常
+                        </div>
+                      )}
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            })}
+          </MapContainer>
+        )}
       </div>
 
       {/* Header */}
