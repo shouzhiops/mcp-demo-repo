@@ -73,7 +73,8 @@ export default function Home() {
 
   const filterMenu = (item: any) => {
     if (isSuperAdmin) return true;
-    return permissionList.includes(item.path);
+    // Check if the specific path is granted, or if the parent "mobile" category is granted
+    return permissionList.includes(item.path) || permissionList.includes('mobile');
   };
 
   const menuItems = allMenuItems.filter(filterMenu);

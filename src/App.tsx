@@ -20,7 +20,7 @@ function App() {
         <Route path="/" element={<Navigate to="/admin" replace />} />
         <Route path="/mobile/*" element={<PrivateRoute><MobileApp /></PrivateRoute>} />
         <Route path="/admin/*" element={<PrivateRoute><AdminApp /></PrivateRoute>} />
-        <Route path="/screen/*" element={<ScreenApp />} />
+        <Route path="/screen/*" element={<PrivateRoute><ScreenApp /></PrivateRoute>} />
       </Routes>
     </Router>
   );

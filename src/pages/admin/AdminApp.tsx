@@ -58,7 +58,7 @@ export default function AdminApp() {
 
   const menuItems = allMenuItems.filter(item => {
     if (isSuperAdmin) return true;
-    return permissionList.includes(item.key);
+    return permissionList.includes(item.key) || permissionList.includes('admin');
   });
 
   return (
