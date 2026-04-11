@@ -51,7 +51,7 @@ export default function AdminApp() {
       <Sider width={240} theme="dark" className="fixed left-0 h-screen shadow-xl">
         <div className="h-16 flex items-center justify-center bg-gray-900 border-b border-gray-800">
           <span className="text-white text-lg font-bold tracking-wider">
-            农村一标四实系统
+            莲麻村治理中心
           </span>
         </div>
         <Menu
