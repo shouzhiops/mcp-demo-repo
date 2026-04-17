@@ -18,6 +18,11 @@ import House from './House';
 import Unit from './Unit';
 import Facility from './Facility';
 import Orders from './Orders';
+import Disputes from './Disputes';
+import Projects from './Projects';
+import FloatingPopulations from './FloatingPopulations';
+import HouseInspections from './HouseInspections';
+import SupervisionTasks from './SupervisionTasks';
 import { useStore } from '../../store';
 
 const { Header, Sider, Content } = Layout;
@@ -25,7 +30,10 @@ const { Header, Sider, Content } = Layout;
 export default function AdminApp() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { fetchAddresses, fetchOrders, fetchPopulations, fetchHouses, fetchUnits, fetchFacilities } = useStore();
+  const { 
+    fetchAddresses, fetchOrders, fetchPopulations, fetchHouses, fetchUnits, fetchFacilities,
+    fetchDisputeRecords, fetchProjects, fetchFloatingRecords, fetchHouseInspections, fetchSupervisionTasks
+  } = useStore();
 
   useEffect(() => {
     fetchAddresses();
@@ -34,6 +42,11 @@ export default function AdminApp() {
     fetchHouses();
     fetchUnits();
     fetchFacilities();
+    fetchDisputeRecords();
+    fetchProjects();
+    fetchFloatingRecords();
+    fetchHouseInspections();
+    fetchSupervisionTasks();
   }, []);
 
   const menuItems = [
@@ -43,6 +56,11 @@ export default function AdminApp() {
     { key: '/admin/house', icon: <HomeOutlined />, label: '实有房屋台账' },
     { key: '/admin/unit', icon: <ShopOutlined />, label: '实有单位台账' },
     { key: '/admin/facility', icon: <SafetyOutlined />, label: '实有设施台账' },
+    { key: '/admin/disputes', icon: <AlertOutlined />, label: '矛盾纠纷台账' },
+    { key: '/admin/projects', icon: <HomeOutlined />, label: '工程项目台账' },
+    { key: '/admin/floating-populations', icon: <TeamOutlined />, label: '流动人口台账' },
+    { key: '/admin/house-inspections', icon: <SafetyOutlined />, label: '房屋巡查台账' },
+    { key: '/admin/supervision-tasks', icon: <DashboardOutlined />, label: '督导任务台账' },
     { key: '/admin/orders', icon: <AlertOutlined />, label: '隐患分拨调度' },
   ];
 
@@ -86,6 +104,11 @@ export default function AdminApp() {
             <Route path="/house" element={<House />} />
             <Route path="/unit" element={<Unit />} />
             <Route path="/facility" element={<Facility />} />
+            <Route path="/disputes" element={<Disputes />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/floating-populations" element={<FloatingPopulations />} />
+            <Route path="/house-inspections" element={<HouseInspections />} />
+            <Route path="/supervision-tasks" element={<SupervisionTasks />} />
             <Route path="/orders" element={<Orders />} />
           </Routes>
         </Content>

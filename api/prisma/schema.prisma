@@ -32,6 +32,9 @@ model Population {
   
   addressId   String
   address     Address  @relation(fields: [addressId], references: [id])
+
+  disputes        DisputeRecord[]  @relation("DisputePopulations")
+  floatingRecords FloatingRecord[] @relation("FloatingPopulation")
 }
 
 model House {
@@ -43,6 +46,9 @@ model House {
 
   addressId   String
   address     Address  @relation(fields: [addressId], references: [id])
+
+  floatingRecords FloatingRecord[]  @relation("FloatingHouse")
+  inspections     HouseInspection[] @relation("InspectionHouse")
 }
 
 model Unit {
@@ -85,4 +91,81 @@ model Order {
 model Config {
   id          Int      @id @default(1)
   tiandituKey String?
+}
+
+model User {
+  id                  Int               @id @default(autoincrement())
+  name                String
+  phone               String?
+  role                String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  disputes            DisputeRecord[]   @relation("DisputeMediator")
+  projects            Project[]         @relation("ProjectLeader")
+  supervisionTasks    SupervisionTask[] @relation("SupervisionHandler")
+}
+
+model DisputeRecord {
+  id          Int          @id @default(autoincrement())
+  title       String
+  type        String
+  content     String
+  status      String
+  mediatorId  Int?
+  mediator    User?        @relation("DisputeMediator", fields: [mediatorId], references: [id])
+  populations Population[] @relation("DisputePopulations")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Project {
+  id           Int      @id @default(autoincrement())
+  name         String
+  investment   Float
+  area         Float
+  progress     String
+  difficulties String?
+  leaderId     Int?
+  leader       User?    @relation("ProjectLeader", fields: [leaderId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model FloatingRecord {
+  id           Int        @id @default(autoincrement())
+  populationId Int
+  population   Population @relation("FloatingPopulation", fields: [populationId], references: [id])
+  houseId      Int
+  house        House      @relation("FloatingHouse", fields: [houseId], references: [id])
+  origin       String
+  reason       String
+  expireDate   DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model HouseInspection {
+  id        Int      @id @default(autoincrement())
+  houseId   Int
+  house     House    @relation("InspectionHouse", fields: [houseId], references: [id])
+  structure String
+  usage     String
+  hazards   String
+  deadline  DateTime?
+  status    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SupervisionTask {
+  id        Int      @id @default(autoincrement())
+  source    String
+  content   String
+  deadline  DateTime
+  status    String
+  handlerId Int?
+  handler   User?    @relation("SupervisionHandler", fields: [handlerId], references: [id])
+  report    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

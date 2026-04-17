@@ -176,7 +176,265 @@ app.delete('/api/orders/:id', async (req, res) => {
   const { id } = req.params;
   await prisma.order.delete({ where: { id: Number(id) } });
   res.json({ success: true });
-})
+});
+
+// ==================== Dispute API ====================
+app.get('/api/disputes', async (req, res) => {
+  try {
+    const disputes = await prisma.disputeRecord.findMany({
+      include: { mediator: true, populations: true }
+    });
+    res.json(disputes);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/disputes', async (req, res) => {
+  try {
+    const { populations, ...data } = req.body;
+    const createData: any = { ...data };
+    if (populations && populations.length > 0) {
+      createData.populations = {
+        connect: populations.map((id: number) => ({ id }))
+      };
+    }
+    const dispute = await prisma.disputeRecord.create({ data: createData });
+    res.json(dispute);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/disputes/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { populations, ...data } = req.body;
+    const updateData: any = { ...data };
+    if (populations) {
+      updateData.populations = {
+        set: populations.map((id: number) => ({ id }))
+      };
+    }
+    const dispute = await prisma.disputeRecord.update({
+      where: { id: Number(id) },
+      data: updateData
+    });
+    res.json(dispute);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/disputes/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.disputeRecord.delete({ where: { id: Number(id) } });
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== Project API ====================
+app.get('/api/projects', async (req, res) => {
+  try {
+    const projects = await prisma.project.findMany({
+      include: { leader: true }
+    });
+    res.json(projects);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/projects', async (req, res) => {
+  try {
+    const project = await prisma.project.create({ data: req.body });
+    res.json(project);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/projects/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const project = await prisma.project.update({
+      where: { id: Number(id) },
+      data: req.body
+    });
+    res.json(project);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/projects/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.project.delete({ where: { id: Number(id) } });
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== Floating API ====================
+app.get('/api/floatings', async (req, res) => {
+  try {
+    const floatings = await prisma.floatingRecord.findMany({
+      include: { population: true, house: true }
+    });
+    res.json(floatings);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/floatings', async (req, res) => {
+  try {
+    const data = { ...req.body };
+    if (data.expireDate) {
+      data.expireDate = new Date(data.expireDate);
+    }
+    const floating = await prisma.floatingRecord.create({ data });
+    res.json(floating);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/floatings/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = { ...req.body };
+    if (data.expireDate) {
+      data.expireDate = new Date(data.expireDate);
+    }
+    const floating = await prisma.floatingRecord.update({
+      where: { id: Number(id) },
+      data
+    });
+    res.json(floating);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/floatings/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.floatingRecord.delete({ where: { id: Number(id) } });
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== Inspection API ====================
+app.get('/api/inspections', async (req, res) => {
+  try {
+    const inspections = await prisma.houseInspection.findMany({
+      include: { house: true }
+    });
+    res.json(inspections);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/inspections', async (req, res) => {
+  try {
+    const data = { ...req.body };
+    if (data.deadline) {
+      data.deadline = new Date(data.deadline);
+    }
+    const inspection = await prisma.houseInspection.create({ data });
+    res.json(inspection);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/inspections/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = { ...req.body };
+    if (data.deadline) {
+      data.deadline = new Date(data.deadline);
+    }
+    const inspection = await prisma.houseInspection.update({
+      where: { id: Number(id) },
+      data
+    });
+    res.json(inspection);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/inspections/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.houseInspection.delete({ where: { id: Number(id) } });
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== Supervision API ====================
+app.get('/api/supervisions', async (req, res) => {
+  try {
+    const supervisions = await prisma.supervisionTask.findMany({
+      include: { handler: true }
+    });
+    res.json(supervisions);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/supervisions', async (req, res) => {
+  try {
+    const data = { ...req.body };
+    if (data.deadline) {
+      data.deadline = new Date(data.deadline);
+    }
+    const supervision = await prisma.supervisionTask.create({ data });
+    res.json(supervision);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/supervisions/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = { ...req.body };
+    if (data.deadline) {
+      data.deadline = new Date(data.deadline);
+    }
+    const supervision = await prisma.supervisionTask.update({
+      where: { id: Number(id) },
+      data
+    });
+    res.json(supervision);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/supervisions/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.supervisionTask.delete({ where: { id: Number(id) } });
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 

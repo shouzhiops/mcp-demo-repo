@@ -1,6 +1,12 @@
-- [ ] `schema.prisma` 成功扩展了五大业务模型（如 `DisputeRecord`、`Project`），并通过了 `npx prisma db push` 同步到数据库。
-- [ ] 后端 `api/src/index.ts` 提供了五大新增业务模型的 `GET`、`POST`、`PUT`、`DELETE` 接口。
-- [ ] 前端状态库 `src/store/index.ts` 完整实现了新增模块的数据获取与变更方法。
-- [ ] 在 `src/pages/admin/AdminApp.tsx` 的左侧侧边栏中，成功增加了“矛盾化解”、“经济资产”、“人口民生”、“空间治理”和“行政督查”五个维度的导航菜单项。
-- [ ] 新建的 5 个台账页面（如 `Disputes.tsx`）能够正常显示公文表格，且支持呼出新增表单（带政务风格按钮）。
-- [ ] 整体项目通过 `npm run build` 编译，控制台无报错。
+- [x] Prisma 数据库架构成功更新，包含 `DisputeRecord`, `Project`, `FloatingRecord`, `HouseInspection`, `SupervisionTask` 5 个模型及外键约束。
+- [x] 后端 Express 的 `api/src/index.ts` 中成功挂载了上述 5 个模型的 RESTful 接口（总计 20 个）。
+- [x] 后端接口能够正确处理并返回 400 状态码及错误信息（不发生 500 Unhandled Promise Rejection）。
+- [x] 矛盾纠纷新增/编辑接口能正确处理 `populations` 多对多关系。
+- [x] 前端 Zustand `src/store/index.ts` 包含 5 个对应的类型定义、5 个状态数组和 20 个 CRUD Action 函数。
+- [x] 前端 `src/pages/admin/AdminApp.tsx` 的侧边栏被划分为 5 个分组，能正确路由到对应的组件。
+- [x] 在管理后台能成功打开、新增和展示“矛盾纠纷台账”。
+- [x] 在管理后台能成功打开、新增和展示“招商项目台账”。
+- [x] 在管理后台能成功打开、新增和展示“流动人口台账”。
+- [x] 在管理后台能成功打开、新增和展示“房屋安全巡检台账”。
+- [x] 在管理后台能成功打开、新增和展示“上级交办事项台账”，并能高亮逾期未办结的任务。
+- [x] 执行 `npm run build` 无任何类型或语法报错。

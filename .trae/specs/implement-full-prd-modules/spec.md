@@ -1,24 +1,86 @@
-# 基层治理表单系统全面落地 Spec
+# 基层治理表单系统全面落地 Spec (详尽版)
 
 ## Why
-在前面的分析与 PRD 编写中，我们已经明确了系统需要从“扁平的数据登记册”向“实战化的基层治理平台”演进。为了实现矛盾化解、经济动员、人口服务、空间治理和行政督查这五大核心业务的闭环流转，必须在现有的“一标四实”数据库底座上，全量扩建相应的业务流水表单、API 接口和管理前端页面。
+原有的 Spec 仅提供了高维度的方向，缺乏具体到字段级别、接口结构和 UI 交互的详细规范。为了确保五大核心模块（矛盾化解、经济动员、人口服务、空间治理、行政督查）的开发能够精准契合前期梳理的 PRD，需要一份极度详尽的开发规格说明书，明确每一个新增数据模型、每一条 API 路由以及每一个前端页面的构成。
 
 ## What Changes
-- **数据库模型层 (Prisma) 扩展**：在 `schema.prisma` 中新增 5 大模块的业务模型（如 `DisputeRecord`, `Project`, `FloatingRecord`, `HouseInspection`, `SupervisionTask` 等），并通过外键强关联现有的基础表（`Population`, `Address`, `House`）。
-- **后端 API 层 (Express) 开发**：在 `api/src/index.ts` 中补充新增模型对应的全套 CRUD 路由，并包裹规范的 `try...catch` 异常处理。
-- **前端全局状态层 (Zustand) 扩展**：在 `src/store/index.ts` 中新增对应业务状态的 `fetch`, `add`, `update`, `delete` 方法。
-- **前端管理端 (Admin) 页面开发**：在 `src/pages/admin/` 下新增 5 个具有代表性的业务台账页面，并将其接入到 `AdminApp.tsx` 的左侧 Sider 菜单和 React Router 路由体系中。
+
+### 1. 数据库模型详细设计 (Prisma)
+在 `schema.prisma` 中新增以下 5 个模型，并建立关联：
+
+- **DisputeRecord (矛盾纠纷记录)**
+  - `id`: Int (PK)
+  - `title`: String (纠纷简述)
+  - `type`: String (地界林权/婚姻家庭/劳资纠纷/邻里建房)
+  - `content`: String (核心诉求与调解方案)
+  - `status`: String (待调解/调解中/已化解/已上交)
+  - `mediatorId`: Int? (关联 User 表)
+  - `populations`: Population[] (多对多，涉事多方)
+  - `createdAt`, `updatedAt`
+
+- **Project (招商与工程项目)**
+  - `id`: Int (PK)
+  - `name`: String (项目/企业名称)
+  - `investment`: Float (拟投资额-万元)
+  - `area`: Float (用地需求-亩)
+  - `progress`: String (初步对接/实地考察/协议拟定/签约落地)
+  - `difficulties`: String? (存在困难)
+  - `leaderId`: Int? (关联 User，包保领导)
+  - `createdAt`, `updatedAt`
+
+- **FloatingRecord (流动人口登记)**
+  - `id`: Int (PK)
+  - `populationId`: Int (关联 Population，承租人)
+  - `houseId`: Int (关联 House，出租屋)
+  - `origin`: String (流入地)
+  - `reason`: String (务工/经商/探亲/就学)
+  - `expireDate`: DateTime? (预计居住期限)
+  - `createdAt`, `updatedAt`
+
+- **HouseInspection (房屋安全巡检)**
+  - `id`: Int (PK)
+  - `houseId`: Int (关联 House)
+  - `structure`: String (砖木/混砖/钢混/土木)
+  - `usage`: String (自住/群租房/商用/厂房)
+  - `hazards`: String (违规隔断/私拉电线/墙体开裂，存储为逗号分隔)
+  - `deadline`: DateTime? (整改期限)
+  - `status`: String (未整改/整改中/已验收)
+  - `createdAt`, `updatedAt`
+
+- **SupervisionTask (上级交办/督查事项)**
+  - `id`: Int (PK)
+  - `source`: String (市长热线/县纪委/镇综治办)
+  - `content`: String (事项简述)
+  - `deadline`: DateTime (要求办结时间)
+  - `status`: String (待接收/办理中/待审核/已办结)
+  - `handlerId`: Int? (关联 User)
+  - `report`: String? (办结报告)
+  - `createdAt`, `updatedAt`
+
+### 2. 后端 API 接口规范 (Express)
+在 `api/src/index.ts` 中，为上述 5 个模型实现标准 RESTful 接口：
+- `GET /api/disputes`, `POST /api/disputes`, `PUT /api/disputes/:id`, `DELETE /api/disputes/:id`
+- `GET /api/projects`, `POST /api/projects`, `PUT /api/projects/:id`, `DELETE /api/projects/:id`
+- `GET /api/floatings`, `POST /api/floatings`, `PUT /api/floatings/:id`, `DELETE /api/floatings/:id`
+- `GET /api/inspections`, `POST /api/inspections`, `PUT /api/inspections/:id`, `DELETE /api/inspections/:id`
+- `GET /api/supervisions`, `POST /api/supervisions`, `PUT /api/supervisions/:id`, `DELETE /api/supervisions/:id`
+*注：所有接口必须使用 `try { ... } catch (error: any) { res.status(400).json({ error: error.message }) }` 拦截。*
+
+### 3. 前端 Zustand 状态规范
+在 `src/store/index.ts` 中：
+- 定义 `DisputeRecord`, `Project`, `FloatingRecord`, `HouseInspection`, `SupervisionTask` 的 TypeScript Interface。
+- 在 Store 状态中增加对应的 5 个数组变量。
+- 增加 20 个异步方法（每个模块 4 个：fetch, add, update, delete）。
+
+### 4. 前端 UI 页面规范 (Admin)
+在 `src/pages/admin/` 新增 5 个 TSX 文件：
+- **公共标准**：使用 Ant Design 的 `Table` (带 `bordered` 属性)，`Button`，`Modal`，`Form`。所有颜色统一使用政务蓝主题。
+- **页面 1：`Disputes.tsx`** (矛盾纠纷台账)：包含多选人员的 Select (mode="multiple")，状态的 Tag 展示。
+- **页面 2：`Projects.tsx`** (招商项目台账)：包含投资额、面积的 InputNumber，进度的下拉选择。
+- **页面 3：`FloatingPopulations.tsx`** (流动人口台账)：包含关联人员和房屋的 Select 下拉框，以及日期的 DatePicker。
+- **页面 4：`HouseInspections.tsx`** (房屋隐患巡检)：包含多选的 hazards 隐患类型，以及整改状态管理。
+- **页面 5：`SupervisionTasks.tsx`** (交办事项台账)：包含逾期高亮显示逻辑（当前时间超过 deadline 且未办结时飘红）。
 
 ## Impact
-- Affected code: `api/prisma/schema.prisma`, `api/src/index.ts`, `src/store/index.ts`, `src/pages/admin/*`
-- Affected features: 管理后台全面升级，增加五大业务维度的台账管理能力。
-
-## ADDED Requirements
-### Requirement: Comprehensive Governance Modules
-The system SHALL provide structural modules for Dispute Resolution, Economic Assets, Population Services, Space Infrastructure, and Administrative Supervision.
-
-#### Scenario: Success case
-- **WHEN** the admin accesses the system
-- **THEN** they see new menus for each governance module in the sidebar.
-- **WHEN** the admin clicks "矛盾纠纷台账"
-- **THEN** they can view, add, and manage dispute records that are relationally linked to the core `Population` and `User` entities.
+- **深度影响**：完全重构并扩展了系统的数据容量和业务广度，系统将具备成熟的基层政务管理能力。
+- **关联代码**：`api/prisma/schema.prisma`, `api/src/index.ts`, `src/store/index.ts`, `src/pages/admin/AdminApp.tsx` 以及新建的 5 个页面文件。

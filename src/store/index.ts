@@ -71,6 +71,47 @@ export interface Facility {
   address?: Address;
 }
 
+export interface DisputeRecord {
+  id: number;
+  title?: string;
+  content?: string;
+  status?: string;
+  addressId?: string;
+  address?: Address;
+}
+
+export interface Project {
+  id: number;
+  name?: string;
+  status?: string;
+  addressId?: string;
+  address?: Address;
+}
+
+export interface FloatingRecord {
+  id: number;
+  name?: string;
+  reason?: string;
+  addressId?: string;
+  address?: Address;
+}
+
+export interface HouseInspection {
+  id: number;
+  inspector?: string;
+  result?: string;
+  addressId?: string;
+  address?: Address;
+}
+
+export interface SupervisionTask {
+  id: number;
+  title?: string;
+  status?: string;
+  addressId?: string;
+  address?: Address;
+}
+
 interface StoreState {
   orders: Order[];
   addresses: Address[];
@@ -78,13 +119,25 @@ interface StoreState {
   houses: House[];
   units: Unit[];
   facilities: Facility[];
+  disputeRecords: DisputeRecord[];
+  projects: Project[];
+  floatingRecords: FloatingRecord[];
+  houseInspections: HouseInspection[];
+  supervisionTasks: SupervisionTask[];
   loading: boolean;
+  
   fetchAddresses: () => Promise<void>;
   fetchOrders: () => Promise<void>;
   fetchPopulations: () => Promise<void>;
   fetchHouses: () => Promise<void>;
   fetchUnits: () => Promise<void>;
   fetchFacilities: () => Promise<void>;
+  fetchDisputeRecords: () => Promise<void>;
+  fetchProjects: () => Promise<void>;
+  fetchFloatingRecords: () => Promise<void>;
+  fetchHouseInspections: () => Promise<void>;
+  fetchSupervisionTasks: () => Promise<void>;
+  
   updateOrderStatus: (id: number, status: Order['status'], handlerId?: number) => Promise<void>;
   
   // CRUD - Address
@@ -111,6 +164,27 @@ interface StoreState {
   addOrder: (data: Partial<Order>) => Promise<void>;
   updateOrderFull: (id: number, data: Partial<Order>) => Promise<void>;
   deleteOrder: (id: number) => Promise<void>;
+
+  // CRUD - DisputeRecord
+  addDisputeRecord: (data: Partial<DisputeRecord>) => Promise<void>;
+  updateDisputeRecord: (id: number, data: Partial<DisputeRecord>) => Promise<void>;
+  deleteDisputeRecord: (id: number) => Promise<void>;
+  // CRUD - Project
+  addProject: (data: Partial<Project>) => Promise<void>;
+  updateProject: (id: number, data: Partial<Project>) => Promise<void>;
+  deleteProject: (id: number) => Promise<void>;
+  // CRUD - FloatingRecord
+  addFloatingRecord: (data: Partial<FloatingRecord>) => Promise<void>;
+  updateFloatingRecord: (id: number, data: Partial<FloatingRecord>) => Promise<void>;
+  deleteFloatingRecord: (id: number) => Promise<void>;
+  // CRUD - HouseInspection
+  addHouseInspection: (data: Partial<HouseInspection>) => Promise<void>;
+  updateHouseInspection: (id: number, data: Partial<HouseInspection>) => Promise<void>;
+  deleteHouseInspection: (id: number) => Promise<void>;
+  // CRUD - SupervisionTask
+  addSupervisionTask: (data: Partial<SupervisionTask>) => Promise<void>;
+  updateSupervisionTask: (id: number, data: Partial<SupervisionTask>) => Promise<void>;
+  deleteSupervisionTask: (id: number) => Promise<void>;
 }
 
 export const useStore = create<StoreState>((set, get) => ({
@@ -120,6 +194,11 @@ export const useStore = create<StoreState>((set, get) => ({
   houses: [],
   units: [],
   facilities: [],
+  disputeRecords: [],
+  projects: [],
+  floatingRecords: [],
+  houseInspections: [],
+  supervisionTasks: [],
   loading: false,
 
   fetchAddresses: async () => {
@@ -188,6 +267,61 @@ export const useStore = create<StoreState>((set, get) => ({
     }
   },
 
+  fetchDisputeRecords: async () => {
+    set({ loading: true });
+    try {
+      const response = await axios.get(`${API_URL}/disputeRecords`);
+      set({ disputeRecords: response.data, loading: false });
+    } catch (error) {
+      console.error('Error fetching disputeRecords:', error);
+      set({ loading: false });
+    }
+  },
+
+  fetchProjects: async () => {
+    set({ loading: true });
+    try {
+      const response = await axios.get(`${API_URL}/projects`);
+      set({ projects: response.data, loading: false });
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      set({ loading: false });
+    }
+  },
+
+  fetchFloatingRecords: async () => {
+    set({ loading: true });
+    try {
+      const response = await axios.get(`${API_URL}/floatingRecords`);
+      set({ floatingRecords: response.data, loading: false });
+    } catch (error) {
+      console.error('Error fetching floatingRecords:', error);
+      set({ loading: false });
+    }
+  },
+
+  fetchHouseInspections: async () => {
+    set({ loading: true });
+    try {
+      const response = await axios.get(`${API_URL}/houseInspections`);
+      set({ houseInspections: response.data, loading: false });
+    } catch (error) {
+      console.error('Error fetching houseInspections:', error);
+      set({ loading: false });
+    }
+  },
+
+  fetchSupervisionTasks: async () => {
+    set({ loading: true });
+    try {
+      const response = await axios.get(`${API_URL}/supervisionTasks`);
+      set({ supervisionTasks: response.data, loading: false });
+    } catch (error) {
+      console.error('Error fetching supervisionTasks:', error);
+      set({ loading: false });
+    }
+  },
+
   updateOrderStatus: async (id, status, handlerId) => {
     try {
       await axios.patch(`${API_URL}/orders/${id}`, { status, handlerId });
@@ -226,5 +360,30 @@ export const useStore = create<StoreState>((set, get) => ({
   addOrder: async (data) => { await axios.post(`${API_URL}/orders`, data); get().fetchOrders(); },
   updateOrderFull: async (id, data) => { await axios.put(`${API_URL}/orders/${id}`, data); get().fetchOrders(); },
   deleteOrder: async (id) => { await axios.delete(`${API_URL}/orders/${id}`); get().fetchOrders(); },
+
+  // DisputeRecord CRUD
+  addDisputeRecord: async (data) => { await axios.post(`${API_URL}/disputeRecords`, data); get().fetchDisputeRecords(); },
+  updateDisputeRecord: async (id, data) => { await axios.put(`${API_URL}/disputeRecords/${id}`, data); get().fetchDisputeRecords(); },
+  deleteDisputeRecord: async (id) => { await axios.delete(`${API_URL}/disputeRecords/${id}`); get().fetchDisputeRecords(); },
+
+  // Project CRUD
+  addProject: async (data) => { await axios.post(`${API_URL}/projects`, data); get().fetchProjects(); },
+  updateProject: async (id, data) => { await axios.put(`${API_URL}/projects/${id}`, data); get().fetchProjects(); },
+  deleteProject: async (id) => { await axios.delete(`${API_URL}/projects/${id}`); get().fetchProjects(); },
+
+  // FloatingRecord CRUD
+  addFloatingRecord: async (data) => { await axios.post(`${API_URL}/floatingRecords`, data); get().fetchFloatingRecords(); },
+  updateFloatingRecord: async (id, data) => { await axios.put(`${API_URL}/floatingRecords/${id}`, data); get().fetchFloatingRecords(); },
+  deleteFloatingRecord: async (id) => { await axios.delete(`${API_URL}/floatingRecords/${id}`); get().fetchFloatingRecords(); },
+
+  // HouseInspection CRUD
+  addHouseInspection: async (data) => { await axios.post(`${API_URL}/houseInspections`, data); get().fetchHouseInspections(); },
+  updateHouseInspection: async (id, data) => { await axios.put(`${API_URL}/houseInspections/${id}`, data); get().fetchHouseInspections(); },
+  deleteHouseInspection: async (id) => { await axios.delete(`${API_URL}/houseInspections/${id}`); get().fetchHouseInspections(); },
+
+  // SupervisionTask CRUD
+  addSupervisionTask: async (data) => { await axios.post(`${API_URL}/supervisionTasks`, data); get().fetchSupervisionTasks(); },
+  updateSupervisionTask: async (id, data) => { await axios.put(`${API_URL}/supervisionTasks/${id}`, data); get().fetchSupervisionTasks(); },
+  deleteSupervisionTask: async (id) => { await axios.delete(`${API_URL}/supervisionTasks/${id}`); get().fetchSupervisionTasks(); },
 
 }));
