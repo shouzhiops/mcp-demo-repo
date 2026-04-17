@@ -1,0 +1,6 @@
+- [ ] `schema.prisma` 成功扩展了五大业务模型（如 `DisputeRecord`、`Project`），并通过了 `npx prisma db push` 同步到数据库。
+- [ ] 后端 `api/src/index.ts` 提供了五大新增业务模型的 `GET`、`POST`、`PUT`、`DELETE` 接口。
+- [ ] 前端状态库 `src/store/index.ts` 完整实现了新增模块的数据获取与变更方法。
+- [ ] 在 `src/pages/admin/AdminApp.tsx` 的左侧侧边栏中，成功增加了“矛盾化解”、“经济资产”、“人口民生”、“空间治理”和“行政督查”五个维度的导航菜单项。
+- [ ] 新建的 5 个台账页面（如 `Disputes.tsx`）能够正常显示公文表格，且支持呼出新增表单（带政务风格按钮）。
+- [ ] 整体项目通过 `npm run build` 编译，控制台无报错。
