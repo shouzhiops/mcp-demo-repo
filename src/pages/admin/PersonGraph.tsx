@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Graph, NodeData, EdgeData } from '@antv/g6';
-import { Select, Checkbox, Dropdown, MenuProps, message } from 'antd';
+import { Select, Checkbox, Dropdown, MenuProps, message, Input, Modal, Form } from 'antd';
+import { useStore } from '../../store';
 
 // Define the legend options and colors
 const LEGEND_TYPES = [
@@ -66,6 +67,19 @@ export default function PersonGraph() {
     node: null,
   });
 
+  const [searchText, setSearchText] = useState('');
+  const [selectedNodes, setSelectedNodes] = useState<string[]>([]);
+  const selectedNodesRef = useRef<string[]>([]);
+  const [isPathFinding, setIsPathFinding] = useState(false);
+  const [disputeModalVisible, setDisputeModalVisible] = useState(false);
+  const [disputeFormNode, setDisputeFormNode] = useState<any>(null);
+  const addDisputeRecord = useStore(state => state.addDisputeRecord);
+  
+  // Sync selectedNodes to ref for G6 event listeners
+  useEffect(() => {
+    selectedNodesRef.current = selectedNodes;
+  }, [selectedNodes]);
+
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -83,6 +97,23 @@ export default function PersonGraph() {
           size: 40,
           labelText: (d: any) => d.data?.label || d.label,
           labelPlacement: 'bottom',
+        },
+        state: {
+          highlight: {
+            stroke: '#1890ff',
+            lineWidth: 3,
+            shadowColor: '#1890ff',
+            shadowBlur: 10,
+          },
+          dim: {
+            opacity: 0.2,
+          },
+          selected: {
+            stroke: '#ff4d4f',
+            lineWidth: 3,
+            shadowColor: '#ff4d4f',
+            shadowBlur: 10,
+          },
         }
       },
       edge: {
@@ -91,6 +122,19 @@ export default function PersonGraph() {
           labelBackground: true,
           endArrow: true,
         },
+        state: {
+          highlight: {
+            stroke: '#1890ff',
+            lineWidth: 2,
+          },
+          dim: {
+            opacity: 0.2,
+          },
+          selected: {
+            stroke: '#ff4d4f',
+            lineWidth: 2,
+          },
+        }
       },
       behaviors: ['drag-canvas', 'zoom-canvas', 'drag-element'],
       plugins: [
@@ -171,6 +215,34 @@ export default function PersonGraph() {
     loadData();
 
     // Event listeners
+    graph.on('node:click', (e: any) => {
+      const target = e.target;
+      const nodeId = target?.id;
+      if (!nodeId) return;
+
+      if (e.originalEvent?.ctrlKey || e.originalEvent?.metaKey) {
+        const currentSelected = selectedNodesRef.current;
+        let newSelected = [...currentSelected];
+        if (newSelected.includes(nodeId)) {
+          newSelected = newSelected.filter(id => id !== nodeId);
+        } else {
+          if (newSelected.length >= 2) {
+            newSelected.shift(); // keep max 2
+          }
+          newSelected.push(nodeId);
+        }
+        setSelectedNodes(newSelected);
+
+        // Update selected state visually
+        const allNodes = graph.getData().nodes?.map(n => n.id) || [];
+        const stateObj: Record<string, string[]> = {};
+        allNodes.forEach(id => {
+          stateObj[id] = newSelected.includes(id) ? ['selected'] : [];
+        });
+        graph.setElementState(stateObj);
+      }
+    });
+
     graph.on('node:dblclick', async (e: any) => {
       const target = e.target;
       const nodeId = target?.id;
@@ -290,6 +362,140 @@ export default function PersonGraph() {
     
   }, [visibleTypes]);
 
+  const handleSearch = (value: string) => {
+    if (!graphRef.current) return;
+    const graph = graphRef.current;
+    const data = graph.getData();
+    if (!data.nodes) return;
+
+    if (!value.trim()) {
+      handleReset();
+      return;
+    }
+
+    const stateObj: Record<string, string[]> = {};
+    const keyword = value.toLowerCase();
+
+    data.nodes.forEach(n => {
+      let isMatch = false;
+      if (String(n.data?.label || n.label).toLowerCase().includes(keyword)) {
+        isMatch = true;
+      } else {
+        const props = (n.data?.properties || n.properties || {}) as Record<string, any>;
+        for (const key in props) {
+          if (String(props[key]).toLowerCase().includes(keyword)) {
+            isMatch = true;
+            break;
+          }
+        }
+      }
+      stateObj[n.id] = isMatch ? ['highlight'] : ['dim'];
+    });
+
+    data.edges?.forEach(e => {
+      const edgeId = e.id || (e.source + '-' + e.target);
+      stateObj[edgeId as string] = ['dim'];
+    });
+
+    graph.setElementState(stateObj);
+  };
+
+  const bfsShortestPath = (nodes: any[], edges: any[], sourceId: string, targetId: string) => {
+    const adj = new Map<string, string[]>();
+
+    nodes.forEach(n => adj.set(n.id, []));
+    edges.forEach(e => {
+      const s = String(e.source);
+      const t = String(e.target);
+      if (adj.has(s)) adj.get(s)!.push(t);
+      if (adj.has(t)) adj.get(t)!.push(s);
+    });
+
+    const queue: string[][] = [[sourceId]];
+    const visited = new Set([sourceId]);
+
+    while (queue.length > 0) {
+      const path = queue.shift()!;
+      const node = path[path.length - 1];
+
+      if (node === targetId) return path;
+
+      const neighbors = adj.get(node) || [];
+      for (const neighbor of neighbors) {
+        if (!visited.has(neighbor)) {
+          visited.add(neighbor);
+          queue.push([...path, neighbor]);
+        }
+      }
+    }
+    return null;
+  };
+
+  const handleFindPath = () => {
+    if (!graphRef.current || selectedNodes.length !== 2) {
+      message.warning('请使用 Ctrl/Cmd + 点击 选中两个节点');
+      return;
+    }
+    
+    const graph = graphRef.current;
+    const data = graph.getData();
+    if (!data.nodes || !data.edges) return;
+
+    const path = bfsShortestPath(data.nodes, data.edges, selectedNodes[0], selectedNodes[1]);
+
+    if (!path) {
+      message.info('两节点之间不存在路径');
+      return;
+    }
+
+    const pathNodes = new Set(path);
+    const pathEdges = new Set();
+    for (let i = 0; i < path.length - 1; i++) {
+      pathEdges.add(`${path[i]}-${path[i+1]}`);
+      pathEdges.add(`${path[i+1]}-${path[i]}`);
+    }
+
+    const stateObj: Record<string, string[]> = {};
+    data.nodes.forEach(n => {
+      if (pathNodes.has(n.id)) {
+        stateObj[n.id] = ['highlight'];
+      } else {
+        stateObj[n.id] = ['dim'];
+      }
+    });
+
+    data.edges.forEach(e => {
+      const s = String(e.source);
+      const t = String(e.target);
+      const edgeId = e.id || (e.source + '-' + e.target);
+      if (pathEdges.has(`${s}-${t}`)) {
+        stateObj[edgeId as string] = ['highlight'];
+      } else {
+        stateObj[edgeId as string] = ['dim'];
+      }
+    });
+
+    graph.setElementState(stateObj);
+    setIsPathFinding(true);
+  };
+
+  const handleReset = () => {
+    if (!graphRef.current) return;
+    setSearchText('');
+    setSelectedNodes([]);
+    setIsPathFinding(false);
+    
+    const graph = graphRef.current;
+    const data = graph.getData();
+    const stateObj: Record<string, string[]> = {};
+    data.nodes?.forEach(n => stateObj[n.id] = []);
+    data.edges?.forEach(e => {
+      const edgeId = e.id || (e.source + '-' + e.target);
+      stateObj[edgeId as string] = [];
+    });
+    graph.setElementState(stateObj);
+  };
+
   const getMenuItems = (): MenuProps['items'] => {
     const node = menuState.node;
     if (!node) return [];
@@ -301,7 +507,18 @@ export default function PersonGraph() {
         key: 'detail',
         label: `查看${LEGEND_TYPES.find(t => t.value === type)?.label || ''}详情`,
         onClick: () => {
-          message.info(`查看详情: ${node.data?.label || node.id}`);
+          message.info(`即将跳转到详情页: ${node.data?.label || node.id}`);
+          if (type === 'person') {
+            navigate('/admin/population');
+          } else if (type === 'house') {
+            navigate('/admin/house');
+          } else if (type === 'dispute') {
+            navigate('/admin/dispute');
+          } else if (type === 'unit') {
+            navigate('/admin/unit');
+          } else {
+            navigate('/admin');
+          }
           setMenuState(prev => ({ ...prev, visible: false }));
         }
       }
@@ -312,7 +529,8 @@ export default function PersonGraph() {
         key: 'add-dispute',
         label: '新增纠纷记录',
         onClick: () => {
-          message.success('已打开新增纠纷窗口');
+          setDisputeFormNode(node);
+          setDisputeModalVisible(true);
           setMenuState(prev => ({ ...prev, visible: false }));
         }
       });
@@ -374,12 +592,97 @@ export default function PersonGraph() {
     return items;
   };
 
+  const [disputeForm] = Form.useForm();
+
+  const handleAddDispute = async () => {
+    try {
+      const values = await disputeForm.validateFields();
+      
+      const newDisputeId = Date.now();
+      await addDisputeRecord({
+        id: newDisputeId,
+        title: values.title,
+        type: values.type,
+        content: values.content,
+        status: '处理中',
+      });
+      
+      message.success('纠纷记录新增成功');
+      
+      // Add node and edge to graph
+      if (graphRef.current && disputeFormNode) {
+        const graph = graphRef.current;
+        const newDisputeNode = {
+          id: `dispute-${newDisputeId}`,
+          type: 'dispute',
+          label: values.title,
+          properties: {
+            level: '高',
+            date: new Date().toISOString().split('T')[0]
+          }
+        };
+        
+        const newEdge = {
+          source: disputeFormNode.id,
+          target: `dispute-${newDisputeId}`,
+          label: '涉事'
+        };
+        
+        const formattedNodes = formatNodes([newDisputeNode]);
+        
+        graph.addData({
+          nodes: formattedNodes,
+          edges: [{
+            ...newEdge,
+            source: String(newEdge.source),
+            target: String(newEdge.target),
+            data: { ...newEdge }
+          }]
+        });
+        
+        await graph.render();
+      }
+      
+      setDisputeModalVisible(false);
+      disputeForm.resetFields();
+    } catch (error) {
+      console.error('Validation failed:', error);
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
           <h1 className="text-2xl font-bold">人员关系图谱</h1>
-          <div className="flex items-center gap-2 ml-4">
+          
+          <div className="flex items-center gap-2 ml-4 bg-white p-2 rounded shadow-sm border border-gray-200">
+            <Input.Search 
+              placeholder="在图谱内搜索..." 
+              value={searchText}
+              onChange={e => setSearchText(e.target.value)}
+              onSearch={handleSearch}
+              style={{ width: 200 }}
+              allowClear
+            />
+            
+            <button
+              onClick={handleFindPath}
+              className={`px-3 py-1 rounded text-sm text-white ${selectedNodes.length === 2 ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'}`}
+              disabled={selectedNodes.length !== 2}
+            >
+              关系探路
+            </button>
+            
+            <button
+              onClick={handleReset}
+              className="px-3 py-1 rounded text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
+            >
+              清除探路/检索
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 ml-2">
             <span className="text-gray-600 text-sm">布局方式:</span>
             <Select 
               value={layout} 
@@ -396,7 +699,7 @@ export default function PersonGraph() {
         </div>
         <button
           onClick={() => navigate(-1)}
-          className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+          className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 shrink-0 ml-4"
         >
           返回
         </button>
@@ -450,6 +753,50 @@ export default function PersonGraph() {
           </div>
         )}
       </div>
+      
+      <Modal
+        title={`为 ${disputeFormNode?.data?.label || disputeFormNode?.id} 新增纠纷记录`}
+        open={disputeModalVisible}
+        onOk={handleAddDispute}
+        onCancel={() => {
+          setDisputeModalVisible(false);
+          disputeForm.resetFields();
+        }}
+        okText="确认新增"
+        cancelText="取消"
+      >
+        <Form form={disputeForm} layout="vertical">
+          <Form.Item
+            name="title"
+            label="纠纷标题"
+            rules={[{ required: true, message: '请输入纠纷标题' }]}
+          >
+            <Input placeholder="请输入纠纷标题" />
+          </Form.Item>
+          <Form.Item
+            name="type"
+            label="纠纷类型"
+            rules={[{ required: true, message: '请选择纠纷类型' }]}
+          >
+            <Select
+              options={[
+                { value: '邻里纠纷', label: '邻里纠纷' },
+                { value: '物业纠纷', label: '物业纠纷' },
+                { value: '家庭纠纷', label: '家庭纠纷' },
+                { value: '劳资纠纷', label: '劳资纠纷' },
+              ]}
+              placeholder="请选择纠纷类型"
+            />
+          </Form.Item>
+          <Form.Item
+            name="content"
+            label="详细描述"
+            rules={[{ required: true, message: '请输入纠纷详细描述' }]}
+          >
+            <Input.TextArea rows={4} placeholder="请输入详细描述" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }
