@@ -4,7 +4,7 @@ import { SearchOutlined, PlusOutlined, DownloadOutlined, SafetyCertificateOutlin
 import { useStore } from '../../store';
 
 export default function HouseInspections() {
-  const { houseInspections, addresses, addHouseInspection, updateHouseInspection, deleteHouseInspection } = useStore();
+  const { houseInspections, houses, addHouseInspection, updateHouseInspection, deleteHouseInspection } = useStore();
   const [searchText, setSearchText] = useState('');
   
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -36,6 +36,8 @@ export default function HouseInspections() {
   const handleModalOk = async () => {
     try {
       const values = await form.validateFields();
+      if (values.houseId !== undefined) values.houseId = Number(values.houseId);
+
       if (editingId) {
         await updateHouseInspection(editingId, values);
         message.success('更新成功');
@@ -54,9 +56,12 @@ export default function HouseInspections() {
   };
 
   const columns = [
-    { title: '巡查人员', dataIndex: 'inspector', key: 'inspector', width: 150 },
-    { title: '巡查结果', dataIndex: 'result', key: 'result', width: 250 },
-    { title: '巡查地址', dataIndex: 'addressId', key: 'addressId', width: 200 },
+    { title: '房屋ID', dataIndex: 'houseId', key: 'houseId', width: 120 },
+    { title: '建筑结构', dataIndex: 'structure', key: 'structure', width: 150 },
+    { title: '使用情况', dataIndex: 'usage', key: 'usage', width: 150 },
+    { title: '安全隐患', dataIndex: 'hazards', key: 'hazards', width: 250 },
+    { title: '整改期限', dataIndex: 'deadline', key: 'deadline', width: 150 },
+    { title: '状态', dataIndex: 'status', key: 'status', width: 120 },
     {
       title: '操作',
       key: 'action',
@@ -79,8 +84,8 @@ export default function HouseInspections() {
   ];
 
   const filteredData = houseInspections.filter(item => 
-    (item.inspector && item.inspector.includes(searchText)) || 
-    (item.addressId && item.addressId.includes(searchText))
+    (item.structure && item.structure.includes(searchText)) || 
+    (item.hazards && item.hazards.includes(searchText))
   );
 
   return (
@@ -95,7 +100,7 @@ export default function HouseInspections() {
       extra={
         <Space>
           <Input
-            placeholder="搜索巡查人员/地址"
+            placeholder="搜索建筑结构/隐患"
             prefix={<SearchOutlined />}
             onChange={e => setSearchText(e.target.value)}
             style={{ width: 250 }}
@@ -121,21 +126,30 @@ export default function HouseInspections() {
         destroyOnClose
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="inspector" label="巡查人员" rules={[{ required: true, message: '请输入巡查人员' }]}>
-            <Input placeholder="请输入巡查人员姓名" />
+          <Form.Item name="houseId" label="巡查房屋" rules={[{ required: true, message: '请选择巡查房屋' }]}>
+            <Select placeholder="请选择巡查房屋" showSearch optionFilterProp="children" allowClear>
+              {houses.map(h => (
+                <Select.Option key={h.id} value={h.id}>房屋ID: {h.id}</Select.Option>
+              ))}
+            </Select>
           </Form.Item>
-          <Form.Item name="result" label="巡查结果">
-            <Select placeholder="请选择巡查结果" allowClear>
+          <Form.Item name="structure" label="建筑结构" rules={[{ required: true, message: '请输入建筑结构' }]}>
+            <Input placeholder="如：砖木、钢混等" />
+          </Form.Item>
+          <Form.Item name="usage" label="使用情况" rules={[{ required: true, message: '请输入使用情况' }]}>
+            <Input placeholder="如：自住、出租等" />
+          </Form.Item>
+          <Form.Item name="hazards" label="安全隐患" rules={[{ required: true, message: '请输入安全隐患' }]}>
+            <Input.TextArea rows={4} placeholder="请输入安全隐患描述" />
+          </Form.Item>
+          <Form.Item name="deadline" label="整改期限">
+            <Input type="date" placeholder="请选择整改期限" />
+          </Form.Item>
+          <Form.Item name="status" label="状态" rules={[{ required: true, message: '请选择状态' }]}>
+            <Select placeholder="请选择状态" allowClear>
               <Select.Option value="正常">正常</Select.Option>
               <Select.Option value="存在隐患">存在隐患</Select.Option>
               <Select.Option value="需整改">需整改</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item name="addressId" label="巡查地址">
-            <Select placeholder="请选择巡查地址" showSearch optionFilterProp="children" allowClear>
-              {addresses.map(addr => (
-                <Select.Option key={addr.id} value={addr.id}>{addr.id}</Select.Option>
-              ))}
             </Select>
           </Form.Item>
         </Form>

@@ -4,7 +4,7 @@ import { SearchOutlined, PlusOutlined, DownloadOutlined, ProjectOutlined } from 
 import { useStore } from '../../store';
 
 export default function Projects() {
-  const { projects, addresses, addProject, updateProject, deleteProject } = useStore();
+  const { projects, addProject, updateProject, deleteProject } = useStore();
   const [searchText, setSearchText] = useState('');
   
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -36,6 +36,10 @@ export default function Projects() {
   const handleModalOk = async () => {
     try {
       const values = await form.validateFields();
+      if (values.investment !== undefined) values.investment = Number(values.investment);
+      if (values.area !== undefined) values.area = Number(values.area);
+      if (values.leaderId !== undefined) values.leaderId = Number(values.leaderId);
+
       if (editingId) {
         await updateProject(editingId, values);
         message.success('更新成功');
@@ -55,8 +59,11 @@ export default function Projects() {
 
   const columns = [
     { title: '项目名称', dataIndex: 'name', key: 'name', width: 200 },
-    { title: '状态', dataIndex: 'status', key: 'status', width: 120 },
-    { title: '关联地址', dataIndex: 'addressId', key: 'addressId', width: 200 },
+    { title: '投资金额', dataIndex: 'investment', key: 'investment', width: 120 },
+    { title: '占地面积', dataIndex: 'area', key: 'area', width: 120 },
+    { title: '项目进度', dataIndex: 'progress', key: 'progress', width: 150 },
+    { title: '困难问题', dataIndex: 'difficulties', key: 'difficulties', width: 200 },
+    { title: '负责人ID', dataIndex: 'leaderId', key: 'leaderId', width: 100 },
     {
       title: '操作',
       key: 'action',
@@ -80,7 +87,7 @@ export default function Projects() {
 
   const filteredData = projects.filter(item => 
     (item.name && item.name.includes(searchText)) || 
-    (item.addressId && item.addressId.includes(searchText))
+    (item.progress && item.progress.includes(searchText))
   );
 
   return (
@@ -124,20 +131,20 @@ export default function Projects() {
           <Form.Item name="name" label="项目名称" rules={[{ required: true, message: '请输入项目名称' }]}>
             <Input placeholder="请输入项目名称" />
           </Form.Item>
-          <Form.Item name="status" label="状态">
-            <Select placeholder="请选择状态" allowClear>
-              <Select.Option value="未开始">未开始</Select.Option>
-              <Select.Option value="进行中">进行中</Select.Option>
-              <Select.Option value="已完成">已完成</Select.Option>
-              <Select.Option value="已延期">已延期</Select.Option>
-            </Select>
+          <Form.Item name="investment" label="投资金额" rules={[{ required: true, message: '请输入投资金额' }]}>
+            <Input type="number" step="0.01" placeholder="请输入投资金额" />
           </Form.Item>
-          <Form.Item name="addressId" label="关联地址">
-            <Select placeholder="请选择关联地址" showSearch optionFilterProp="children" allowClear>
-              {addresses.map(addr => (
-                <Select.Option key={addr.id} value={addr.id}>{addr.id}</Select.Option>
-              ))}
-            </Select>
+          <Form.Item name="area" label="占地面积" rules={[{ required: true, message: '请输入占地面积' }]}>
+            <Input type="number" step="0.01" placeholder="请输入占地面积" />
+          </Form.Item>
+          <Form.Item name="progress" label="项目进度" rules={[{ required: true, message: '请输入项目进度' }]}>
+            <Input placeholder="请输入项目进度" />
+          </Form.Item>
+          <Form.Item name="difficulties" label="困难问题">
+            <Input.TextArea rows={4} placeholder="请输入困难问题" />
+          </Form.Item>
+          <Form.Item name="leaderId" label="负责人ID">
+            <Input type="number" placeholder="请输入负责人ID" />
           </Form.Item>
         </Form>
       </Modal>

@@ -4,7 +4,7 @@ import { SearchOutlined, PlusOutlined, DownloadOutlined, UsergroupAddOutlined } 
 import { useStore } from '../../store';
 
 export default function FloatingPopulations() {
-  const { floatingRecords, addresses, addFloatingRecord, updateFloatingRecord, deleteFloatingRecord } = useStore();
+  const { floatingRecords, populations, houses, addFloatingRecord, updateFloatingRecord, deleteFloatingRecord } = useStore();
   const [searchText, setSearchText] = useState('');
   
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -36,6 +36,9 @@ export default function FloatingPopulations() {
   const handleModalOk = async () => {
     try {
       const values = await form.validateFields();
+      if (values.populationId !== undefined) values.populationId = Number(values.populationId);
+      if (values.houseId !== undefined) values.houseId = Number(values.houseId);
+
       if (editingId) {
         await updateFloatingRecord(editingId, values);
         message.success('更新成功');
@@ -54,9 +57,11 @@ export default function FloatingPopulations() {
   };
 
   const columns = [
-    { title: '姓名', dataIndex: 'name', key: 'name', width: 150 },
-    { title: '流入原因', dataIndex: 'reason', key: 'reason', width: 250 },
-    { title: '现住地址', dataIndex: 'addressId', key: 'addressId', width: 200 },
+    { title: '人口ID', dataIndex: 'populationId', key: 'populationId', width: 120 },
+    { title: '房屋ID', dataIndex: 'houseId', key: 'houseId', width: 120 },
+    { title: '来源地', dataIndex: 'origin', key: 'origin', width: 150 },
+    { title: '流入原因', dataIndex: 'reason', key: 'reason', width: 200 },
+    { title: '过期时间', dataIndex: 'expireDate', key: 'expireDate', width: 150 },
     {
       title: '操作',
       key: 'action',
@@ -79,8 +84,8 @@ export default function FloatingPopulations() {
   ];
 
   const filteredData = floatingRecords.filter(item => 
-    (item.name && item.name.includes(searchText)) || 
-    (item.addressId && item.addressId.includes(searchText))
+    (item.origin && item.origin.includes(searchText)) || 
+    (item.reason && item.reason.includes(searchText))
   );
 
   return (
@@ -95,7 +100,7 @@ export default function FloatingPopulations() {
       extra={
         <Space>
           <Input
-            placeholder="搜索姓名/地址"
+            placeholder="搜索来源地/原因"
             prefix={<SearchOutlined />}
             onChange={e => setSearchText(e.target.value)}
             style={{ width: 250 }}
@@ -121,18 +126,28 @@ export default function FloatingPopulations() {
         destroyOnClose
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="name" label="姓名" rules={[{ required: true, message: '请输入姓名' }]}>
-            <Input placeholder="请输入姓名" />
-          </Form.Item>
-          <Form.Item name="reason" label="流入原因">
-            <Input placeholder="请输入流入原因（如务工、经商等）" />
-          </Form.Item>
-          <Form.Item name="addressId" label="现住地址">
-            <Select placeholder="请选择现住地址" showSearch optionFilterProp="children" allowClear>
-              {addresses.map(addr => (
-                <Select.Option key={addr.id} value={addr.id}>{addr.id}</Select.Option>
+          <Form.Item name="populationId" label="流动人口" rules={[{ required: true, message: '请选择流动人口' }]}>
+            <Select placeholder="请选择流动人口" showSearch optionFilterProp="children" allowClear>
+              {populations.map(p => (
+                <Select.Option key={p.id} value={p.id}>{p.name} (ID: {p.id})</Select.Option>
               ))}
             </Select>
+          </Form.Item>
+          <Form.Item name="houseId" label="现住房屋" rules={[{ required: true, message: '请选择现住房屋' }]}>
+            <Select placeholder="请选择现住房屋" showSearch optionFilterProp="children" allowClear>
+              {houses.map(h => (
+                <Select.Option key={h.id} value={h.id}>房屋ID: {h.id}</Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item name="origin" label="来源地" rules={[{ required: true, message: '请输入来源地' }]}>
+            <Input placeholder="请输入来源地" />
+          </Form.Item>
+          <Form.Item name="reason" label="流入原因" rules={[{ required: true, message: '请输入流入原因' }]}>
+            <Input placeholder="请输入流入原因（如务工、经商等）" />
+          </Form.Item>
+          <Form.Item name="expireDate" label="过期时间">
+            <Input type="date" placeholder="请选择过期时间" />
           </Form.Item>
         </Form>
       </Modal>

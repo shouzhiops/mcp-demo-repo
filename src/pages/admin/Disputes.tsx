@@ -4,7 +4,7 @@ import { SearchOutlined, PlusOutlined, DownloadOutlined, AlertOutlined } from '@
 import { useStore } from '../../store';
 
 export default function Disputes() {
-  const { disputeRecords, addresses, addDisputeRecord, updateDisputeRecord, deleteDisputeRecord } = useStore();
+  const { disputeRecords, addDisputeRecord, updateDisputeRecord, deleteDisputeRecord } = useStore();
   const [searchText, setSearchText] = useState('');
   
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -36,6 +36,9 @@ export default function Disputes() {
   const handleModalOk = async () => {
     try {
       const values = await form.validateFields();
+      if (values.mediatorId) {
+        values.mediatorId = Number(values.mediatorId);
+      }
       if (editingId) {
         await updateDisputeRecord(editingId, values);
         message.success('更新成功');
@@ -55,9 +58,11 @@ export default function Disputes() {
 
   const columns = [
     { title: '标题', dataIndex: 'title', key: 'title', width: 200 },
+    { title: '类型', dataIndex: 'type', key: 'type', width: 150 },
     { title: '内容', dataIndex: 'content', key: 'content', width: 300 },
     { title: '状态', dataIndex: 'status', key: 'status', width: 100 },
-    { title: '关联地址', dataIndex: 'addressId', key: 'addressId', width: 200 },
+    { title: '调解员ID', dataIndex: 'mediatorId', key: 'mediatorId', width: 120 },
+    { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 180 },
     {
       title: '操作',
       key: 'action',
@@ -81,7 +86,7 @@ export default function Disputes() {
 
   const filteredData = disputeRecords.filter(item => 
     (item.title && item.title.includes(searchText)) || 
-    (item.addressId && item.addressId.includes(searchText))
+    (item.type && item.type.includes(searchText))
   );
 
   return (
@@ -125,22 +130,21 @@ export default function Disputes() {
           <Form.Item name="title" label="标题" rules={[{ required: true, message: '请输入标题' }]}>
             <Input placeholder="请输入标题" />
           </Form.Item>
-          <Form.Item name="content" label="内容">
+          <Form.Item name="type" label="类型" rules={[{ required: true, message: '请输入类型' }]}>
+            <Input placeholder="请输入类型" />
+          </Form.Item>
+          <Form.Item name="content" label="内容" rules={[{ required: true, message: '请输入内容' }]}>
             <Input.TextArea rows={4} placeholder="请输入内容" />
           </Form.Item>
-          <Form.Item name="status" label="状态">
+          <Form.Item name="status" label="状态" rules={[{ required: true, message: '请选择状态' }]}>
             <Select placeholder="请选择状态" allowClear>
               <Select.Option value="待处理">待处理</Select.Option>
               <Select.Option value="处理中">处理中</Select.Option>
               <Select.Option value="已解决">已解决</Select.Option>
             </Select>
           </Form.Item>
-          <Form.Item name="addressId" label="关联地址">
-            <Select placeholder="请选择关联地址" showSearch optionFilterProp="children" allowClear>
-              {addresses.map(addr => (
-                <Select.Option key={addr.id} value={addr.id}>{addr.id}</Select.Option>
-              ))}
-            </Select>
+          <Form.Item name="mediatorId" label="调解员ID">
+            <Input type="number" placeholder="请输入调解员ID" />
           </Form.Item>
         </Form>
       </Modal>

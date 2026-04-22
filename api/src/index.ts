@@ -179,7 +179,7 @@ app.delete('/api/orders/:id', async (req, res) => {
 });
 
 // ==================== Dispute API ====================
-app.get('/api/disputes', async (req, res) => {
+app.get('/api/disputeRecords', async (req, res) => {
   try {
     const disputes = await prisma.disputeRecord.findMany({
       include: { mediator: true, populations: true }
@@ -190,7 +190,7 @@ app.get('/api/disputes', async (req, res) => {
   }
 });
 
-app.post('/api/disputes', async (req, res) => {
+app.post('/api/disputeRecords', async (req, res) => {
   try {
     const { populations, ...data } = req.body;
     const createData: any = { ...data };
@@ -206,7 +206,7 @@ app.post('/api/disputes', async (req, res) => {
   }
 });
 
-app.put('/api/disputes/:id', async (req, res) => {
+app.put('/api/disputeRecords/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { populations, ...data } = req.body;
@@ -226,7 +226,7 @@ app.put('/api/disputes/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/disputes/:id', async (req, res) => {
+app.delete('/api/disputeRecords/:id', async (req, res) => {
   try {
     const { id } = req.params;
     await prisma.disputeRecord.delete({ where: { id: Number(id) } });
@@ -281,7 +281,7 @@ app.delete('/api/projects/:id', async (req, res) => {
 });
 
 // ==================== Floating API ====================
-app.get('/api/floatings', async (req, res) => {
+app.get('/api/floatingRecords', async (req, res) => {
   try {
     const floatings = await prisma.floatingRecord.findMany({
       include: { population: true, house: true }
@@ -292,11 +292,13 @@ app.get('/api/floatings', async (req, res) => {
   }
 });
 
-app.post('/api/floatings', async (req, res) => {
+app.post('/api/floatingRecords', async (req, res) => {
   try {
     const data = { ...req.body };
     if (data.expireDate) {
       data.expireDate = new Date(data.expireDate);
+    } else {
+      delete data.expireDate;
     }
     const floating = await prisma.floatingRecord.create({ data });
     res.json(floating);
@@ -305,12 +307,14 @@ app.post('/api/floatings', async (req, res) => {
   }
 });
 
-app.put('/api/floatings/:id', async (req, res) => {
+app.put('/api/floatingRecords/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const data = { ...req.body };
     if (data.expireDate) {
       data.expireDate = new Date(data.expireDate);
+    } else {
+      data.expireDate = null;
     }
     const floating = await prisma.floatingRecord.update({
       where: { id: Number(id) },
@@ -322,7 +326,7 @@ app.put('/api/floatings/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/floatings/:id', async (req, res) => {
+app.delete('/api/floatingRecords/:id', async (req, res) => {
   try {
     const { id } = req.params;
     await prisma.floatingRecord.delete({ where: { id: Number(id) } });
@@ -333,7 +337,7 @@ app.delete('/api/floatings/:id', async (req, res) => {
 });
 
 // ==================== Inspection API ====================
-app.get('/api/inspections', async (req, res) => {
+app.get('/api/houseInspections', async (req, res) => {
   try {
     const inspections = await prisma.houseInspection.findMany({
       include: { house: true }
@@ -344,11 +348,13 @@ app.get('/api/inspections', async (req, res) => {
   }
 });
 
-app.post('/api/inspections', async (req, res) => {
+app.post('/api/houseInspections', async (req, res) => {
   try {
     const data = { ...req.body };
     if (data.deadline) {
       data.deadline = new Date(data.deadline);
+    } else {
+      delete data.deadline;
     }
     const inspection = await prisma.houseInspection.create({ data });
     res.json(inspection);
@@ -357,12 +363,14 @@ app.post('/api/inspections', async (req, res) => {
   }
 });
 
-app.put('/api/inspections/:id', async (req, res) => {
+app.put('/api/houseInspections/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const data = { ...req.body };
     if (data.deadline) {
       data.deadline = new Date(data.deadline);
+    } else {
+      data.deadline = null;
     }
     const inspection = await prisma.houseInspection.update({
       where: { id: Number(id) },
@@ -374,7 +382,7 @@ app.put('/api/inspections/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/inspections/:id', async (req, res) => {
+app.delete('/api/houseInspections/:id', async (req, res) => {
   try {
     const { id } = req.params;
     await prisma.houseInspection.delete({ where: { id: Number(id) } });
@@ -385,7 +393,7 @@ app.delete('/api/inspections/:id', async (req, res) => {
 });
 
 // ==================== Supervision API ====================
-app.get('/api/supervisions', async (req, res) => {
+app.get('/api/supervisionTasks', async (req, res) => {
   try {
     const supervisions = await prisma.supervisionTask.findMany({
       include: { handler: true }
@@ -396,11 +404,13 @@ app.get('/api/supervisions', async (req, res) => {
   }
 });
 
-app.post('/api/supervisions', async (req, res) => {
+app.post('/api/supervisionTasks', async (req, res) => {
   try {
     const data = { ...req.body };
     if (data.deadline) {
       data.deadline = new Date(data.deadline);
+    } else {
+      delete data.deadline;
     }
     const supervision = await prisma.supervisionTask.create({ data });
     res.json(supervision);
@@ -409,12 +419,14 @@ app.post('/api/supervisions', async (req, res) => {
   }
 });
 
-app.put('/api/supervisions/:id', async (req, res) => {
+app.put('/api/supervisionTasks/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const data = { ...req.body };
     if (data.deadline) {
       data.deadline = new Date(data.deadline);
+    } else {
+      delete data.deadline;
     }
     const supervision = await prisma.supervisionTask.update({
       where: { id: Number(id) },
@@ -426,7 +438,7 @@ app.put('/api/supervisions/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/supervisions/:id', async (req, res) => {
+app.delete('/api/supervisionTasks/:id', async (req, res) => {
   try {
     const { id } = req.params;
     await prisma.supervisionTask.delete({ where: { id: Number(id) } });
@@ -575,6 +587,9 @@ app.get('/api/graph/person/:id', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+setInterval(() => {}, 1000 * 60 * 60); // Keep alive
+

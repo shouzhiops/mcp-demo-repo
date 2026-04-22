@@ -71,45 +71,76 @@ export interface Facility {
   address?: Address;
 }
 
+export interface User {
+  id: number;
+  name: string;
+  phone?: string;
+  role?: string;
+}
+
 export interface DisputeRecord {
   id: number;
-  title?: string;
-  content?: string;
-  status?: string;
-  addressId?: string;
-  address?: Address;
+  title: string;
+  type: string;
+  content: string;
+  status: string;
+  mediatorId?: number;
+  mediator?: User;
+  populations?: Population[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Project {
   id: number;
-  name?: string;
-  status?: string;
-  addressId?: string;
-  address?: Address;
+  name: string;
+  investment: number;
+  area: number;
+  progress: string;
+  difficulties?: string;
+  leaderId?: number;
+  leader?: User;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface FloatingRecord {
   id: number;
-  name?: string;
-  reason?: string;
-  addressId?: string;
-  address?: Address;
+  populationId: number;
+  population?: Population;
+  houseId: number;
+  house?: House;
+  origin: string;
+  reason: string;
+  expireDate?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface HouseInspection {
   id: number;
-  inspector?: string;
-  result?: string;
-  addressId?: string;
-  address?: Address;
+  houseId: number;
+  house?: House;
+  structure: string;
+  usage: string;
+  hazards: string;
+  deadline?: string;
+  status: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface SupervisionTask {
   id: number;
-  title?: string;
-  status?: string;
-  addressId?: string;
-  address?: Address;
+  source: string;
+  content: string;
+  deadline: string;
+  status: string;
+  handlerId?: number;
+  handler?: User;
+  report?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface StoreState {

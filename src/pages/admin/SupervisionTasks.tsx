@@ -4,7 +4,7 @@ import { SearchOutlined, PlusOutlined, DownloadOutlined, EyeOutlined } from '@an
 import { useStore } from '../../store';
 
 export default function SupervisionTasks() {
-  const { supervisionTasks, addresses, addSupervisionTask, updateSupervisionTask, deleteSupervisionTask } = useStore();
+  const { supervisionTasks, addSupervisionTask, updateSupervisionTask, deleteSupervisionTask } = useStore();
   const [searchText, setSearchText] = useState('');
   
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -36,6 +36,8 @@ export default function SupervisionTasks() {
   const handleModalOk = async () => {
     try {
       const values = await form.validateFields();
+      if (values.handlerId !== undefined) values.handlerId = Number(values.handlerId);
+
       if (editingId) {
         await updateSupervisionTask(editingId, values);
         message.success('更新成功');
@@ -54,9 +56,12 @@ export default function SupervisionTasks() {
   };
 
   const columns = [
-    { title: '督导标题', dataIndex: 'title', key: 'title', width: 250 },
+    { title: '任务来源', dataIndex: 'source', key: 'source', width: 150 },
+    { title: '任务内容', dataIndex: 'content', key: 'content', width: 300 },
+    { title: '截止期限', dataIndex: 'deadline', key: 'deadline', width: 150 },
+    { title: '处理人ID', dataIndex: 'handlerId', key: 'handlerId', width: 120 },
     { title: '状态', dataIndex: 'status', key: 'status', width: 120 },
-    { title: '督导地址', dataIndex: 'addressId', key: 'addressId', width: 200 },
+    { title: '督导报告', dataIndex: 'report', key: 'report', width: 200 },
     {
       title: '操作',
       key: 'action',
@@ -79,8 +84,8 @@ export default function SupervisionTasks() {
   ];
 
   const filteredData = supervisionTasks.filter(item => 
-    (item.title && item.title.includes(searchText)) || 
-    (item.addressId && item.addressId.includes(searchText))
+    (item.source && item.source.includes(searchText)) || 
+    (item.content && item.content.includes(searchText))
   );
 
   return (
@@ -95,7 +100,7 @@ export default function SupervisionTasks() {
       extra={
         <Space>
           <Input
-            placeholder="搜索标题/地址"
+            placeholder="搜索任务来源/内容"
             prefix={<SearchOutlined />}
             onChange={e => setSearchText(e.target.value)}
             style={{ width: 250 }}
@@ -121,22 +126,27 @@ export default function SupervisionTasks() {
         destroyOnClose
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="title" label="任务标题" rules={[{ required: true, message: '请输入任务标题' }]}>
-            <Input placeholder="请输入任务标题" />
+          <Form.Item name="source" label="任务来源" rules={[{ required: true, message: '请输入任务来源' }]}>
+            <Input placeholder="请输入任务来源" />
           </Form.Item>
-          <Form.Item name="status" label="状态">
+          <Form.Item name="content" label="任务内容" rules={[{ required: true, message: '请输入任务内容' }]}>
+            <Input.TextArea rows={4} placeholder="请输入任务内容" />
+          </Form.Item>
+          <Form.Item name="deadline" label="截止期限" rules={[{ required: true, message: '请选择截止期限' }]}>
+            <Input type="date" placeholder="请选择截止期限" />
+          </Form.Item>
+          <Form.Item name="handlerId" label="处理人ID">
+            <Input type="number" placeholder="请输入处理人ID" />
+          </Form.Item>
+          <Form.Item name="status" label="状态" rules={[{ required: true, message: '请选择状态' }]}>
             <Select placeholder="请选择状态" allowClear>
               <Select.Option value="待分配">待分配</Select.Option>
               <Select.Option value="进行中">进行中</Select.Option>
               <Select.Option value="已完成">已完成</Select.Option>
             </Select>
           </Form.Item>
-          <Form.Item name="addressId" label="督导地址">
-            <Select placeholder="请选择督导地址" showSearch optionFilterProp="children" allowClear>
-              {addresses.map(addr => (
-                <Select.Option key={addr.id} value={addr.id}>{addr.id}</Select.Option>
-              ))}
-            </Select>
+          <Form.Item name="report" label="督导报告">
+            <Input.TextArea rows={4} placeholder="请输入督导报告" />
           </Form.Item>
         </Form>
       </Modal>
