@@ -35,6 +35,19 @@ model Population {
 
   disputes        DisputeRecord[]  @relation("DisputePopulations")
   floatingRecords FloatingRecord[] @relation("FloatingPopulation")
+
+  sourceRelations PopulationRelation[] @relation("SourceRelation")
+  targetRelations PopulationRelation[] @relation("TargetRelation")
+}
+
+model PopulationRelation {
+  id        Int        @id @default(autoincrement())
+  sourceId  Int
+  targetId  Int
+  relation  String
+  
+  source    Population @relation("SourceRelation", fields: [sourceId], references: [id])
+  target    Population @relation("TargetRelation", fields: [targetId], references: [id])
 }
 
 model House {

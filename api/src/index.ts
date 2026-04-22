@@ -436,6 +436,143 @@ app.delete('/api/supervisions/:id', async (req, res) => {
   }
 });
 
+// ==================== Graph API ====================
+app.get('/api/graph/person/:id', async (req, res) => {
+  try {
+    const personId = Number(req.params.id);
+    const person = await prisma.population.findUnique({
+      where: { id: personId },
+      include: {
+        address: true,
+        disputes: true,
+        floatingRecords: { include: { house: true } },
+        sourceRelations: { include: { target: true } },
+        targetRelations: { include: { source: true } }
+      }
+    });
+
+    if (!person) {
+      return res.status(404).json({ error: 'Person not found' });
+    }
+
+    // Query owned houses
+    const ownedHouses = await prisma.house.findMany({
+      where: { ownerName: person.name }
+    });
+
+    const nodesMap = new Map();
+    const edges = [];
+
+    // Add central person
+    nodesMap.set(`person_${person.id}`, {
+      id: `person_${person.id}`,
+      label: person.name,
+      type: 'person',
+      properties: {
+        type: person.type,
+        phone: person.phone,
+        gender: person.gender
+      }
+    });
+
+    // Address/House (from direct address)
+    if (person.address) {
+      nodesMap.set(`address_${person.address.id}`, {
+        id: `address_${person.address.id}`,
+        label: person.address.name,
+        type: 'address',
+        properties: { type: person.address.type }
+      });
+      edges.push({
+        source: `person_${person.id}`,
+        target: `address_${person.address.id}`,
+        label: '居住在'
+      });
+    }
+
+    // Floating records / Houses
+    person.floatingRecords.forEach(record => {
+      if (record.house) {
+        nodesMap.set(`house_${record.house.id}`, {
+          id: `house_${record.house.id}`,
+          label: `房屋 ${record.house.id}`,
+          type: 'house',
+          properties: { status: record.house.status, usage: record.house.usage }
+        });
+        edges.push({
+          source: `person_${person.id}`,
+          target: `house_${record.house.id}`,
+          label: '流动居住'
+        });
+      }
+    });
+
+    // Owned houses
+    ownedHouses.forEach(house => {
+      nodesMap.set(`house_${house.id}`, {
+        id: `house_${house.id}`,
+        label: `房屋 ${house.id}`,
+        type: 'house',
+        properties: { status: house.status, usage: house.usage }
+      });
+      edges.push({
+        source: `person_${person.id}`,
+        target: `house_${house.id}`,
+        label: '产权人'
+      });
+    });
+
+    // Disputes
+    person.disputes.forEach(dispute => {
+      nodesMap.set(`dispute_${dispute.id}`, {
+        id: `dispute_${dispute.id}`,
+        label: dispute.title,
+        type: 'dispute',
+        properties: { status: dispute.status, type: dispute.type }
+      });
+      edges.push({
+        source: `person_${person.id}`,
+        target: `dispute_${dispute.id}`,
+        label: '涉事'
+      });
+    });
+
+    // Social relations
+    person.sourceRelations.forEach(rel => {
+      nodesMap.set(`person_${rel.target.id}`, {
+        id: `person_${rel.target.id}`,
+        label: rel.target.name,
+        type: 'person',
+        properties: { type: rel.target.type }
+      });
+      edges.push({
+        source: `person_${person.id}`,
+        target: `person_${rel.target.id}`,
+        label: rel.relation
+      });
+    });
+
+    person.targetRelations.forEach(rel => {
+      nodesMap.set(`person_${rel.source.id}`, {
+        id: `person_${rel.source.id}`,
+        label: rel.source.name,
+        type: 'person',
+        properties: { type: rel.source.type }
+      });
+      edges.push({
+        source: `person_${rel.source.id}`,
+        target: `person_${person.id}`,
+        label: rel.relation
+      });
+    });
+
+    const nodes = Array.from(nodesMap.values());
+    res.json({ nodes, edges });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {

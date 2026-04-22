@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Table, Button, Space, Tag, Input, Card, Modal, Form, Select, Popconfirm, message } from 'antd';
 import { SearchOutlined, PlusOutlined, DownloadOutlined, TeamOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
 
 export default function Population() {
   const { populations, addresses, addPopulation, updatePopulation, deletePopulation } = useStore();
+  const navigate = useNavigate();
   const [searchText, setSearchText] = useState('');
   
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -82,9 +84,10 @@ export default function Population() {
       title: '操作',
       key: 'action',
       fixed: 'right' as const,
-      width: 120,
+      width: 180,
       render: (_, record: any) => (
         <Space size="middle">
+          <a className="text-green-600" onClick={() => navigate(`/admin/population/graph/${record.id}`)}>查看图谱</a>
           <a className="text-blue-600" onClick={() => handleEdit(record)}>编辑</a>
           <Popconfirm
             title="确定要删除该人口记录吗？"

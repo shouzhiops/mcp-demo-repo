@@ -23,6 +23,7 @@ import Projects from './Projects';
 import FloatingPopulations from './FloatingPopulations';
 import HouseInspections from './HouseInspections';
 import SupervisionTasks from './SupervisionTasks';
+import PersonGraph from './PersonGraph';
 import { useStore } from '../../store';
 
 const { Header, Sider, Content } = Layout;
@@ -101,6 +102,7 @@ export default function AdminApp() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/address" element={<Address />} />
             <Route path="/population" element={<Population />} />
+            <Route path="/population/graph/:id" element={<PersonGraph />} />
             <Route path="/house" element={<House />} />
             <Route path="/unit" element={<Unit />} />
             <Route path="/facility" element={<Facility />} />
