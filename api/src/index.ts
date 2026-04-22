@@ -500,7 +500,47 @@ app.get('/api/graph/person/:id', async (req, res) => {
         target: `address_${person.address.id}`,
         label: '居住在'
       });
+
+      // Orders at the same address
+      const addressOrders = await prisma.order.findMany({
+        where: { addressId: person.address.id }
+      });
+      addressOrders.forEach(order => {
+        nodesMap.set(`order_${order.id}`, {
+          id: `order_${order.id}`,
+          label: order.description || `工单 ${order.id}`,
+          type: 'order',
+          properties: { status: order.status, type: order.type, priority: order.priority }
+        });
+        edges.push({
+          source: `address_${person.address.id}`,
+          target: `order_${order.id}`,
+          label: '发生预警'
+        });
+      });
     }
+
+    // Units related to person (by legalPerson or contactPhone)
+    const unitOrConditions: any[] = [{ legalPerson: person.name }];
+    if (person.phone) {
+      unitOrConditions.push({ contactPhone: person.phone });
+    }
+    const relatedUnits = await prisma.unit.findMany({
+      where: { OR: unitOrConditions }
+    });
+    relatedUnits.forEach(unit => {
+      nodesMap.set(`unit_${unit.id}`, {
+        id: `unit_${unit.id}`,
+        label: unit.name,
+        type: 'unit',
+        properties: { type: unit.type, legalPerson: unit.legalPerson }
+      });
+      edges.push({
+        source: `person_${person.id}`,
+        target: `unit_${unit.id}`,
+        label: unit.legalPerson === person.name ? '法人' : '联系人'
+      });
+    });
 
     // Floating records / Houses
     person.floatingRecords.forEach(record => {
@@ -577,6 +617,234 @@ app.get('/api/graph/person/:id', async (req, res) => {
         label: rel.relation
       });
     });
+
+    const nodes = Array.from(nodesMap.values());
+    res.json({ nodes, edges });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/graph/hop/:nodeId', async (req, res) => {
+  try {
+    const { nodeId } = req.params;
+    const [type, idStr] = nodeId.split('_');
+    const id = Number(idStr);
+    
+    const nodesMap = new Map();
+    const edges: any[] = [];
+
+    if (type === 'person') {
+      const person = await prisma.population.findUnique({
+        where: { id },
+        include: {
+          address: true,
+          disputes: true,
+          floatingRecords: { include: { house: true } },
+          sourceRelations: { include: { target: true } },
+          targetRelations: { include: { source: true } }
+        }
+      });
+      if (person) {
+        if (person.address) {
+          nodesMap.set(`address_${person.address.id}`, {
+            id: `address_${person.address.id}`,
+            label: person.address.name,
+            type: 'address',
+            properties: { type: person.address.type }
+          });
+          edges.push({ source: nodeId, target: `address_${person.address.id}`, label: '居住在' });
+          
+          const addressOrders = await prisma.order.findMany({ where: { addressId: person.address.id } });
+          addressOrders.forEach(order => {
+            nodesMap.set(`order_${order.id}`, {
+              id: `order_${order.id}`, label: order.description || `工单 ${order.id}`, type: 'order',
+              properties: { status: order.status, type: order.type, priority: order.priority }
+            });
+            edges.push({ source: `address_${person.address.id}`, target: `order_${order.id}`, label: '发生预警' });
+          });
+        }
+        
+        const unitOrConditions: any[] = [{ legalPerson: person.name }];
+        if (person.phone) unitOrConditions.push({ contactPhone: person.phone });
+        const relatedUnits = await prisma.unit.findMany({ where: { OR: unitOrConditions } });
+        relatedUnits.forEach(unit => {
+          nodesMap.set(`unit_${unit.id}`, {
+            id: `unit_${unit.id}`, label: unit.name, type: 'unit',
+            properties: { type: unit.type, legalPerson: unit.legalPerson }
+          });
+          edges.push({ source: nodeId, target: `unit_${unit.id}`, label: unit.legalPerson === person.name ? '法人' : '联系人' });
+        });
+        
+        const ownedHouses = await prisma.house.findMany({ where: { ownerName: person.name } });
+        ownedHouses.forEach(house => {
+          nodesMap.set(`house_${house.id}`, {
+            id: `house_${house.id}`, label: `房屋 ${house.id}`, type: 'house',
+            properties: { status: house.status, usage: house.usage }
+          });
+          edges.push({ source: nodeId, target: `house_${house.id}`, label: '产权人' });
+        });
+        
+        person.floatingRecords.forEach(record => {
+          if (record.house) {
+            nodesMap.set(`house_${record.house.id}`, {
+              id: `house_${record.house.id}`, label: `房屋 ${record.house.id}`, type: 'house',
+              properties: { status: record.house.status, usage: record.house.usage }
+            });
+            edges.push({ source: nodeId, target: `house_${record.house.id}`, label: '流动居住' });
+          }
+        });
+        
+        person.disputes.forEach(dispute => {
+          nodesMap.set(`dispute_${dispute.id}`, {
+            id: `dispute_${dispute.id}`, label: dispute.title, type: 'dispute',
+            properties: { status: dispute.status, type: dispute.type }
+          });
+          edges.push({ source: nodeId, target: `dispute_${dispute.id}`, label: '涉事' });
+        });
+        
+        person.sourceRelations.forEach(rel => {
+          nodesMap.set(`person_${rel.target.id}`, {
+            id: `person_${rel.target.id}`, label: rel.target.name, type: 'person',
+            properties: { type: rel.target.type }
+          });
+          edges.push({ source: nodeId, target: `person_${rel.target.id}`, label: rel.relation });
+        });
+        
+        person.targetRelations.forEach(rel => {
+          nodesMap.set(`person_${rel.source.id}`, {
+            id: `person_${rel.source.id}`, label: rel.source.name, type: 'person',
+            properties: { type: rel.source.type }
+          });
+          edges.push({ source: `person_${rel.source.id}`, target: nodeId, label: rel.relation });
+        });
+      }
+    } else if (type === 'house') {
+      const house = await prisma.house.findUnique({
+        where: { id },
+        include: { floatingRecords: { include: { population: true } }, inspections: true }
+      });
+      if (house) {
+        if (house.addressId) {
+          const address = await prisma.address.findUnique({ where: { id: house.addressId } });
+          if (address) {
+            nodesMap.set(`address_${address.id}`, {
+              id: `address_${address.id}`, label: address.name, type: 'address',
+              properties: { type: address.type }
+            });
+            edges.push({ source: nodeId, target: `address_${address.id}`, label: '坐落于' });
+          }
+        }
+        if (house.ownerName) {
+          const owners = await prisma.population.findMany({ where: { name: house.ownerName } });
+          owners.forEach(owner => {
+            nodesMap.set(`person_${owner.id}`, {
+              id: `person_${owner.id}`, label: owner.name, type: 'person',
+              properties: { type: owner.type, phone: owner.phone, gender: owner.gender }
+            });
+            edges.push({ source: `person_${owner.id}`, target: nodeId, label: '产权人' });
+          });
+        }
+        house.floatingRecords.forEach(record => {
+          if (record.population) {
+            nodesMap.set(`person_${record.population.id}`, {
+              id: `person_${record.population.id}`, label: record.population.name, type: 'person',
+              properties: { type: record.population.type, phone: record.population.phone, gender: record.population.gender }
+            });
+            edges.push({ source: `person_${record.population.id}`, target: nodeId, label: '流动居住' });
+          }
+        });
+      }
+    } else if (type === 'address') {
+      const addressId = idStr; // Address ID is string
+      const address = await prisma.address.findUnique({
+        where: { id: addressId },
+        include: { populations: true, houses: true, units: true, orders: true }
+      });
+      if (address) {
+        address.populations.forEach(p => {
+          nodesMap.set(`person_${p.id}`, {
+            id: `person_${p.id}`, label: p.name, type: 'person',
+            properties: { type: p.type, phone: p.phone, gender: p.gender }
+          });
+          edges.push({ source: `person_${p.id}`, target: `address_${addressId}`, label: '居住在' });
+        });
+        address.houses.forEach(h => {
+          nodesMap.set(`house_${h.id}`, {
+            id: `house_${h.id}`, label: `房屋 ${h.id}`, type: 'house',
+            properties: { status: h.status, usage: h.usage }
+          });
+          edges.push({ source: `house_${h.id}`, target: `address_${addressId}`, label: '坐落于' });
+        });
+        address.units.forEach(u => {
+          nodesMap.set(`unit_${u.id}`, {
+            id: `unit_${u.id}`, label: u.name, type: 'unit',
+            properties: { type: u.type, legalPerson: u.legalPerson }
+          });
+          edges.push({ source: `unit_${u.id}`, target: `address_${addressId}`, label: '坐落于' });
+        });
+        address.orders.forEach(o => {
+          nodesMap.set(`order_${o.id}`, {
+            id: `order_${o.id}`, label: o.description || `工单 ${o.id}`, type: 'order',
+            properties: { status: o.status, type: o.type, priority: o.priority }
+          });
+          edges.push({ source: `address_${addressId}`, target: `order_${o.id}`, label: '发生预警' });
+        });
+      }
+    } else if (type === 'unit') {
+      const unit = await prisma.unit.findUnique({ where: { id } });
+      if (unit) {
+        if (unit.addressId) {
+          const address = await prisma.address.findUnique({ where: { id: unit.addressId } });
+          if (address) {
+            nodesMap.set(`address_${address.id}`, {
+              id: `address_${address.id}`, label: address.name, type: 'address',
+              properties: { type: address.type }
+            });
+            edges.push({ source: nodeId, target: `address_${address.id}`, label: '坐落于' });
+          }
+        }
+        if (unit.legalPerson || unit.contactPhone) {
+          const conditions: any[] = [];
+          if (unit.legalPerson) conditions.push({ name: unit.legalPerson });
+          if (unit.contactPhone) conditions.push({ phone: unit.contactPhone });
+          const persons = await prisma.population.findMany({ where: { OR: conditions } });
+          persons.forEach(p => {
+            nodesMap.set(`person_${p.id}`, {
+              id: `person_${p.id}`, label: p.name, type: 'person',
+              properties: { type: p.type, phone: p.phone, gender: p.gender }
+            });
+            edges.push({ source: `person_${p.id}`, target: nodeId, label: p.name === unit.legalPerson ? '法人' : '联系人' });
+          });
+        }
+      }
+    } else if (type === 'order') {
+      const order = await prisma.order.findUnique({ where: { id } });
+      if (order && order.addressId) {
+        const address = await prisma.address.findUnique({ where: { id: order.addressId } });
+        if (address) {
+          nodesMap.set(`address_${address.id}`, {
+            id: `address_${address.id}`, label: address.name, type: 'address',
+            properties: { type: address.type }
+          });
+          edges.push({ source: `address_${address.id}`, target: nodeId, label: '发生预警' });
+        }
+      }
+    } else if (type === 'dispute') {
+      const dispute = await prisma.disputeRecord.findUnique({
+        where: { id },
+        include: { populations: true }
+      });
+      if (dispute) {
+        dispute.populations.forEach(p => {
+          nodesMap.set(`person_${p.id}`, {
+            id: `person_${p.id}`, label: p.name, type: 'person',
+            properties: { type: p.type, phone: p.phone, gender: p.gender }
+          });
+          edges.push({ source: `person_${p.id}`, target: nodeId, label: '涉事' });
+        });
+      }
+    }
 
     const nodes = Array.from(nodesMap.values());
     res.json({ nodes, edges });
